@@ -108,12 +108,14 @@ public class WindowsPackCommandRunner : PackageBuilder<WindowsPackOptions, Windo
         if (Options.NoStub) {
             Log.Info("Skipping launcher stub, --noStub was specified.");
         } else if (Options.NoMainExe) {
-            // Without a main executable to copy them from, the stub takes its icon and version from the package.
+            // Without a main executable to copy them from, the stub takes its version from the package and
+            // its icon from --stubIcon (or --icon). The installer copies both onto the main executable it downloads.
             var stubPath = Path.Combine(packDir, GetStubBaseName() + "_ExecutionStub.exe");
             IoUtil.Retry(() => File.Copy(HelperFile.GetStubExecutablePath(Options.TargetRuntime, Log), stubPath, true));
             var edit = new ResourceEdit(stubPath, Log);
             edit.SetVersionInfo(PackageManifest.ParseFromFile(Path.Combine(packDir, CoreUtil.SpecVersionFileName)));
-            if (Options.Icon != null) edit.SetExeIcon(Options.Icon);
+            var stubIcon = Options.StubIcon ?? Options.Icon;
+            if (stubIcon != null) edit.SetExeIcon(stubIcon);
             edit.Commit();
         } else {
             var mainExeName = Options.EntryExecutableName;

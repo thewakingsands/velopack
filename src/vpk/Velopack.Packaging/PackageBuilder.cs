@@ -85,6 +85,10 @@ public abstract class PackageBuilder<T, TValidator> : ValidatedCommand<T, TValid
 
         // check that entry exe exists
         var mainExeName = options.EntryExecutableName ?? options.PackId;
+        if (!HasMainExe(options) && string.IsNullOrEmpty(options.EntryExecutableName)) {
+            throw new UserInfoException("A package without a main executable needs its name: --mainExe {name.exe}");
+        }
+
         var mainSearchPaths = HasMainExe(options) ? GetMainExeSearchPaths(packDirectory, mainExeName) : [];
         string mainExePath = null;
         foreach (var path in mainSearchPaths) {
@@ -105,7 +109,8 @@ public abstract class PackageBuilder<T, TValidator> : ValidatedCommand<T, TValid
         }
 
         MainExePath = mainExePath;
-        options.EntryExecutableName = mainExePath == null ? null : Path.GetRelativePath(packDirectory, mainExePath).Replace('\\', '/');
+        // Without a main executable in the package the name stays as given: the installer puts one there.
+        options.EntryExecutableName = mainExePath == null ? mainExeName : Path.GetRelativePath(packDirectory, mainExePath).Replace('\\', '/');
         Options = options;
 
         var assetCache = new BuildAssets(pkgTempDir, channel);

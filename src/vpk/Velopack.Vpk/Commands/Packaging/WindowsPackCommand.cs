@@ -28,6 +28,8 @@ public class WindowsPackCommand : PackCommand
 
     public bool NoMainExe { get; private set; }
 
+    public string StubIcon { get; private set; }
+
     public string InstWelcome { get; private set; }
 
     public string InstLicense { get; private set; }
@@ -101,7 +103,11 @@ public class WindowsPackCommand : PackCommand
             .SetDescription("Omit the launcher stub; start the app from 'current'.");
 
         AddOption<bool>((v) => NoMainExe = v, ["--noMainExe"])
-            .SetDescription("The package has no main executable; needs --runtime with an architecture.");
+            .SetDescription("The package has no main executable, the installer downloads it; needs --mainExe and --runtime with an architecture.");
+
+        AddOption<FileInfo>((v) => StubIcon = v.ToFullNameOrNull(), ["--stubIcon"])
+            .SetDescription("Icon of the launcher stub when the package has no main executable (default: --icon).")
+            .SetArgumentHelpName("PATH");
 
         if (VelopackRuntimeInfo.IsWindows) {
             AddOption<string>((v) => SignParameters = v, ["--signParams", "-n"])
