@@ -78,7 +78,12 @@ pub fn prepare(request: &Request, reporter: &dyn ProgressReporter) -> Result<()>
                     Some(total) => reporter.set_progress((done.min(total) * 100 / total) as i16),
                     None => reporter.set_indeterminate(),
                 }
-                status(dialogs::locale_strings::runtime_downloading(&size(done), total.map(size).as_deref()));
+                // Until the server has answered there is nothing to count.
+                status(if done == 0 && total.is_none() {
+                           dialogs::locale_strings::runtime_download_starting()
+                       } else {
+                           dialogs::locale_strings::runtime_downloading(&size(done), total.map(size).as_deref())
+                       });
             }
             Step::Verifying => {
                 reporter.set_indeterminate();

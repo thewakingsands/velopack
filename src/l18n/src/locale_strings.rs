@@ -294,6 +294,10 @@ pub fn runtime_prepare_header(app: &str) -> String {
     format_message(RUNTIME_PREPARE_HEADER, Some(&args))
 }
 
+pub fn runtime_download_starting() -> String {
+    format_message(RUNTIME_DOWNLOAD_STARTING, None)
+}
+
 /// `done` and `total` are sizes already formatted for display.
 pub fn runtime_downloading(done: &str, total: Option<&str>) -> String {
     let mut args = FluentArgs::new();

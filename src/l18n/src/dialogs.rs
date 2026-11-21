@@ -282,8 +282,9 @@ pub fn show_runtime_failed(app_title: &str, body: &str) -> bool {
         return false;
     }
     let header = locale_strings::runtime_failed_header(app_title);
-    let buttons = vec![locale_strings::btn_retry(), locale_strings::btn_cancel()];
-    matches!(show_message(app_title, &header, body, XDialogIcon::Error, buttons), Ok(XDialogResult::ButtonPressed(0)))
+    // The last button is the default one: trying again is what most people are here for.
+    let buttons = vec![locale_strings::btn_cancel(), locale_strings::btn_retry()];
+    matches!(show_message(app_title, &header, body, XDialogIcon::Error, buttons), Ok(XDialogResult::ButtonPressed(1)))
 }
 
 pub fn show_start_corrupt_error(app_title: &str) {

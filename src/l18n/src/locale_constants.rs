@@ -252,6 +252,7 @@ pub const FORK_KEYS: &[&str] = &[
     PROGRESS_CANCELLING,
     RUNTIME_PREPARE_HEADER,
     RUNTIME_PREPARE_BODY,
+    RUNTIME_DOWNLOAD_STARTING,
     RUNTIME_DOWNLOADING,
     RUNTIME_DOWNLOADING_UNKNOWN,
     RUNTIME_VERIFYING,
@@ -266,6 +267,7 @@ pub const BTN_RETRY: &str = "btn-retry";
 pub const PROGRESS_CANCELLING: &str = "progress-cancelling";
 pub const RUNTIME_PREPARE_HEADER: &str = "runtime-prepare-header";
 pub const RUNTIME_PREPARE_BODY: &str = "runtime-prepare-body";
+pub const RUNTIME_DOWNLOAD_STARTING: &str = "runtime-download-starting";
 pub const RUNTIME_DOWNLOADING: &str = "runtime-downloading";
 pub const RUNTIME_DOWNLOADING_UNKNOWN: &str = "runtime-downloading-unknown";
 pub const RUNTIME_VERIFYING: &str = "runtime-verifying";
