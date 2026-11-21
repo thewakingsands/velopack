@@ -96,7 +96,9 @@ pub fn install(pkg: &mut BundleZip, install_to: Option<&PathBuf>, start_args: Op
         let installed_version = auto_locate_app_manifest(LocationContext::FromSpecifiedRootDir(root_path.clone(), None))
             .ok()
             .map(|loc| loc.get_manifest_version().clone());
-        if !dialogs::show_overwrite_repair_dialog(&app.title, &app.version, &root_path, installed_version.as_ref()) {
+        // Running a newer installer is how a user updates by hand: there is nothing to ask.
+        let is_update = installed_version.as_ref().is_some_and(|installed| installed < &app.version);
+        if !is_update && !dialogs::show_overwrite_repair_dialog(&app.title, &app.version, &root_path, installed_version.as_ref()) {
             // user cancelled overwrite prompt
             error!("Directory already exists, and user cancelled overwrite.");
             return Ok(());
@@ -144,7 +146,7 @@ pub fn install(pkg: &mut BundleZip, install_to: Option<&PathBuf>, start_args: Op
         )
     };
 
-    let install_result = install_impl(pkg, &locator, &tx, start_args, channel_override);
+    let install_result = install_impl(pkg, &locator, &tx, start_args, channel_override, root_path_renamed.as_deref());
     let _ = tx.send(windows::splash::MSG_CLOSE);
 
     if install_result.is_ok() {
@@ -160,6 +162,15 @@ pub fn install(pkg: &mut BundleZip, install_to: Option<&PathBuf>, start_args: Op
             let _ = shared::force_stop_package(&root_path);
             let _ = shared::retry_io(|| remove_dir_all::remove_dir_all(&root_path));
             let _ = shared::retry_io(|| fs::rename(&renamed, &root_path));
+        } else {
+            // Nothing was installed here before, so nothing of a failed install is worth keeping.
+            info!("Removing the incomplete installation...");
+            drop(_mutex);
+            let _ = shared::retry_io(|| remove_dir_all::remove_dir_all(&root_path));
+        }
+        if install_result.as_ref().is_err_and(|e| e.downcast_ref::<shared::runtime::Cancelled>().is_some()) {
+            info!("The user cancelled the installation.");
+            return Ok(());
         }
         install_result?;
     }
@@ -192,6 +203,7 @@ fn install_impl(
     tx: &std::sync::mpsc::Sender<i16>,
     start_args: Option<Vec<OsString>>,
     channel_override: Option<&str>,
+    previous_root: Option<&Path>,
 ) -> Result<()> {
     info!("Starting installation!");
 
@@ -228,6 +240,23 @@ fn install_impl(
             warn!("Failed to apply channel override (non-fatal): {}", e);
         }
     }
+
+    // A package without a main executable names a runtime to download; an installation this one
+    // replaces may already have it.
+    let previous_current = previous_root.map(|root| root.join("current"));
+    windows::runtime::prepare(
+        &windows::runtime::Request {
+            app_dir: &current_path,
+            locator,
+            previous_app_dir: previous_current.as_deref(),
+            previous_root,
+            stub: &windows::runtime::stub_path(&locator.get_root_dir(), locator),
+        },
+        &dialogs::progress::ChannelProgressReporter::new(tx.clone()),
+    )?;
+    // What is left takes moments and is not worth undoing.
+    dialogs::progress::disallow_cancel();
+    let _ = tx.send(windows::splash::MSG_INDEFINITE);
 
     if !main_exe_path.exists() {
         return Err(SetupError::MainExeMissing {

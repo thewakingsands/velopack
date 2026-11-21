@@ -75,6 +75,9 @@ pub fn show_splash_dialog(app_name: String, app_version: String, imgstream: Opti
                 } else if next >= 0 {
                     reporter.set_progress(next);
                 }
+                if let Some(text) = crate::dialogs::progress::take_channel_text() {
+                    reporter.set_text(&text);
+                }
                 std::thread::sleep(std::time::Duration::from_millis(50));
             }
         });

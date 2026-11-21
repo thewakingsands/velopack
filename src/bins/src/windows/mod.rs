@@ -5,7 +5,9 @@ pub mod prerequisite;
 pub mod runtimes;
 pub mod splash;
 
+pub mod brand;
 pub mod registry;
+pub mod runtime;
 pub mod webview2;
 
 mod self_delete;
