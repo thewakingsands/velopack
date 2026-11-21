@@ -64,7 +64,7 @@ pub fn prepare(request: &Request, reporter: &dyn ProgressReporter) -> Result<()>
         }
         brand::copy_icon_and_version(request.stub, main_exe)
     };
-    let size = |bytes: u64| pretty_bytes_rust::pretty_bytes(bytes, None);
+    let size = |bytes: u64| format!("{:.0} MB", bytes as f64 / (1024.0 * 1024.0));
     let mut step = |step: Step| {
         // Leave the dialog saying that it is cancelling.
         if cancelled() {
