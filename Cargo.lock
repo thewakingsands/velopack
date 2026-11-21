@@ -5997,8 +5997,6 @@ checksum = "163b33ed8786455e2fa5d72f554057ce3f3182425434f756cd39c99839d88e23"
 [[package]]
 name = "xdialog"
 version = "4.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c03ec48e183d60b4a1d99debc27545dc355430333bd698e2a3b703c32b2e99d"
 dependencies = [
  "accesskit",
  "accesskit_winit",

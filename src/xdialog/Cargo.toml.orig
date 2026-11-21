@@ -1,0 +1,220 @@
+[package]
+name = "xdialog"
+version = "4.1.2"
+edition = "2021"
+license = "MIT"
+description = "A small cross-platform native dialogs library."
+authors = ["Caelan Sayler <git@caesay.com>"]
+repository = "https://github.com/velopack/xdialog"
+keywords = ["dialog", "message-box", "messagebox", "cross-platform"]
+categories = ["graphics", "gui", "visualization"]
+rust-version = "1.95"
+# The golden PNGs (~7 MB); the tests that read them need a checkout.
+exclude = ["tests/visual_references/", ".github/"]
+
+[features]
+default = []
+# `init_win32_direct()` (Windows): Win32 TaskDialog without an XDialogBuilder.
+win32-direct = []
+# `init_maccf_direct()` (macOS).
+maccf-direct = ["dep:core-foundation", "dep:core-foundation-sys"]
+# `XDialogBuilder::into_host` / `into_host_app` + `xdialog::host` (incl. `xdialog::host::winit`, a
+# re-export of the winit 0.30 xdialog uses): run xdialog's dialogs inside an event loop your
+# application owns, for one run (`run_app`) or many (`run_app_on_demand`, `pump_app_events`).
+# Purely additive: it only exposes API; nothing changes for XDialogBuilder::run.
+winit-host = []
+
+# ---- private (underscore = not part of the public contract) ----
+# Offscreen renderer (`xdialog::__test`) and `XDialogHost::test_*` (doc(hidden)). NEVER lists a
+# `dep:`: offscreen rendering uses the platform's own drawing backend.
+_test-hooks = []
+
+[dependencies]
+log = "0.4"
+thiserror = "2.0"
+# Drawn dialogs (Fluent, Ubuntu; all platforms): winit windows and AccessKit. winit's default
+# features are what Linux needs (x11, wayland, rwh_06); its platform deps are target-gated.
+winit = "0.30.13"
+accesskit = "0.25"
+accesskit_winit = { version = "0.34", default-features = false, features = ["rwh_06", "accesskit_unix", "async-io"] }
+# Paragraph base direction only (`get_base_direction`); every drawing backend does bidi itself.
+unicode-bidi = "0.3.18"
+# `XDialogOptions::icon_source`: .ico / .png (ico) and .icns (icns) decoding.
+ico = "0.5.0"
+icns = { version = "0.5.0", default-features = false, features = ["pngio"] }
+
+# Presenting drawn frames through a window buffer: the software backend (Linux and other Unix)
+# and the CoreGraphics backend (macOS). Windows presents with Direct2D.
+[target.'cfg(not(windows))'.dependencies]
+softbuffer = "0.4.8"
+
+# The software drawing backend (`backends/draw/soft`: vello_cpu + cosmic-text, no C deps, no
+# fontconfig). This cfg mirrors the `mod backend` switch in `backends/draw/mod.rs` literally:
+# Windows and macOS never compile these crates.
+[target.'cfg(not(any(windows, target_os = "macos")))'.dependencies]
+vello_cpu = { version = "0.2", default-features = false, features = ["std", "text", "u8_pipeline", "png"] }
+# `Tint` for vello_cpu's `set_tint` (vello_cpu does not re-export it).
+vello_common = { version = "0.2", default-features = false }
+cosmic-text = { version = "0.19", default-features = false, features = ["std", "peniko"] }
+skrifa = { version = "0.47.0", default-features = false, features = ["std"] }
+sys-locale = "0.3"
+
+# Linux: the XDG desktop portal (appearance).
+[target.'cfg(target_os = "linux")'.dependencies]
+zbus = "5"
+
+# AppKit Backend; CoreGraphics + CoreText drawing backend (`backends/draw/cg`).
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSArray", "NSBundle", "NSData", "NSDate", "NSDictionary", "NSGeometry", "NSRunLoop", "NSString"] }
+objc2-app-kit = { version = "0.3.2", default-features = false, features = [
+    "std",
+    "objc2-core-foundation",
+    "objc2-quartz-core",
+    "NSApplication",
+    "NSAttributedString",
+    "NSBitmapImageRep",
+    "NSButton",
+    "NSButtonCell",
+    "NSCell",
+    "NSControl",
+    "NSEvent",
+    "NSFont",
+    "NSGlassEffectView",
+    "NSGraphics",
+    "NSGraphicsContext",
+    "NSImage",
+    "NSImageCell",
+    "NSImageRep",
+    "NSImageView",
+    "NSParagraphStyle",
+    "NSProgressIndicator",
+    "NSResponder",
+    "NSRunningApplication",
+    "NSStringDrawing",
+    "NSTextField",
+    "NSView",
+    "NSVisualEffectView",
+    "NSWindow",
+    "NSColor",
+    "NSColorSpace",
+    "NSAppearance",
+] }
+# The translucent window surface (`backends/draw/cg/window.rs`).
+objc2-quartz-core = { version = "0.3", default-features = false, features = ["std", "objc2-core-foundation", "CALayer", "CATransaction"] }
+objc2-core-foundation = { version = "0.3.2", default-features = false, features = ["std", "CFString", "CFAttributedString", "CFDictionary", "CFNumber", "CFArray", "CFCGTypes", "CFPreferences"] }
+objc2-core-graphics = { version = "0.3.2", default-features = false, features = ["std", "CGContext", "CGBitmapContext", "CGColorSpace", "CGColor", "CGImage", "CGDataProvider", "CGGradient", "CGPath", "CGAffineTransform"] }
+objc2-core-text = { version = "0.3.2", default-features = false, features = ["std", "objc2-core-graphics", "CTFont", "CTFontDescriptor", "CTFontTraits", "CTLine", "CTTypesetter", "CTStringAttributes", "CTParagraphStyle", "CTRun"] }
+core-foundation = { version = "0.10", optional = true }
+core-foundation-sys = { version = "0.8", optional = true }
+
+# Win32 Backend; Direct2D + DirectWrite drawing backend (`backends/draw/d2d`).
+[target.'cfg(windows)'.dependencies]
+# DrawLine / DrawTextLayout take `windows_numerics::Vector2` (not re-exported by `windows`).
+windows-numerics = "0.3.1"
+windows = { version = "0.62", features = [
+    "Win32_Foundation",
+    "Win32_UI_Controls",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_System_LibraryLoader",
+    "Win32_Graphics_Dwm",
+    "Win32_System_Registry",
+    "Win32_UI_HiDpi",
+    "Wdk_System_SystemServices",
+    "Win32_System_SystemInformation",
+    "Win32_Graphics_Direct2D",
+    "Win32_Graphics_Direct2D_Common",
+    "Win32_Graphics_DirectWrite",
+    "Win32_Graphics_Dxgi_Common",
+    # WIC MemorySurface (offscreen renders); bindings only, the code is cfg'd to tests/_test-hooks.
+    "Win32_Graphics_Imaging",
+    "Win32_System_Com",
+] }
+
+# The software text rasterizer is slow unoptimized; debug test runs render a lot of text.
+[profile.dev.package."*"]
+opt-level = 2
+
+[[example]]
+name = "win32_direct"
+required-features = ["win32-direct"]
+
+[[example]]
+name = "maccf_direct"
+required-features = ["maccf-direct"]
+
+[[example]]
+name = "winit_host"
+required-features = ["winit-host"]
+
+[[example]]
+name = "winit_host_on_demand"
+required-features = ["winit-host"]
+
+[[example]]
+name = "gallery"
+path = "examples/gallery/main.rs"
+required-features = ["_test-hooks"]
+
+[[test]]
+name = "headless"
+harness = false
+
+[[test]]
+name = "lifecycle"
+harness = false
+
+[[test]]
+name = "builder"
+harness = false
+
+[[test]]
+name = "visual_regression"
+harness = false
+
+[[test]]
+name = "offscreen"
+required-features = ["_test-hooks"]
+
+[[test]]
+name = "fallback"
+harness = false
+required-features = ["_test-hooks"]
+
+[[test]]
+name = "winit_host"
+harness = false
+required-features = ["winit-host", "_test-hooks"]
+
+[[test]]
+name = "winit_host_on_demand"
+harness = false
+required-features = ["winit-host", "_test-hooks"]
+
+[[bench]]
+name = "render"
+harness = false
+required-features = ["_test-hooks"]
+
+[dev-dependencies]
+image = { version = "=0.25.10", default-features = false, features = ["png"] }
+criterion = { version = "=0.8.2", default-features = false, features = ["cargo_bench_support"] }
+
+# Window captures for tests/visual_regression.rs (Windows uses GDI directly, Wayland `grim`).
+[target.'cfg(target_os = "macos")'.dev-dependencies]
+xcap = "=0.9.8"
+
+[target.'cfg(target_os = "linux")'.dev-dependencies]
+x11rb = "0.14.0"
+
+[target.'cfg(windows)'.dev-dependencies]
+windows = { version = "=0.62.2", features = [
+    "Win32_Foundation",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_Graphics_Gdi",
+] }
+
+[package.metadata.docs.rs]
+features = ["winit-host", "win32-direct", "maccf-direct"]
+targets = ["x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
+rustdoc-args = ["--cfg", "docsrs"]

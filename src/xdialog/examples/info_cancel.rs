@@ -1,0 +1,17 @@
+fn main() {
+    println!("Starting Example...");
+    xdialog::XDialogBuilder::new().run(run);
+}
+
+fn run() {
+    println!("Showing OK/Cancel Dialog!");
+    let result =
+        xdialog::show_message_ok_cancel("Title", "Main instruction", "Are you happy with things?", xdialog::XDialogIcon::Information)
+            .unwrap();
+
+    if result {
+        println!("OK button pressed")
+    } else {
+        println!("Cancel button pressed")
+    }
+}
