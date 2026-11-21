@@ -92,6 +92,80 @@ pub fn download_url_as_string(url: &str, options: Option<&HttpOptions>) -> Resul
     Ok(r)
 }
 
+/// Downloads a URL to a file like [`download_url_to_file`], but can be stopped: `progress` gets the bytes
+/// received so far and the total when the server gives one, at least a few times a second, and the
+/// download ends with `Ok(false)` as soon as it returns false. A connection that delivers nothing for
+/// a minute is an error instead of a wait without end.
+pub fn download_url_to_file_while<A, S: AsRef<Path>>(url: &str, file_path: S, mut progress: A) -> Result<bool, Error>
+where
+    A: FnMut(u64, Option<u64>) -> bool,
+{
+    enum Part {
+        Total(Option<u64>),
+        Data(Vec<u8>),
+        Done,
+        Failed(Error),
+    }
+    const STALL: Duration = Duration::from_secs(60);
+    const POLL: Duration = Duration::from_millis(200);
+
+    // The request runs on its own thread: a read that never returns must not keep the caller from
+    // seeing a cancel. When the caller leaves early the thread ends with its next send.
+    let (tx, rx) = std::sync::mpsc::sync_channel::<Part>(4);
+    let url = url.to_string();
+    std::thread::spawn(move || {
+        let result = (|| -> Result<(), Error> {
+            let (head, body) = get_download_agent(None)?.get(&url).call()?.into_parts();
+            let total = head.headers.get("Content-Length").and_then(|s| s.to_str().ok()).and_then(|s| s.parse::<u64>().ok());
+            if tx.send(Part::Total(total)).is_err() {
+                return Ok(());
+            }
+            let mut reader = body.into_reader();
+            loop {
+                let mut buffer = vec![0; 1024 * 1024];
+                let size = reader.read(&mut buffer)?;
+                if size == 0 {
+                    return Ok(());
+                }
+                buffer.truncate(size);
+                if tx.send(Part::Data(buffer)).is_err() {
+                    return Ok(());
+                }
+            }
+        })();
+        let _ = tx.send(match result {
+            Ok(()) => Part::Done,
+            Err(e) => Part::Failed(e),
+        });
+    });
+
+    let mut file = misc::retry_io(|| File::create(file_path.as_ref()))?;
+    let mut downloaded: u64 = 0;
+    let mut total = None;
+    let mut last_data = std::time::Instant::now();
+    loop {
+        match rx.recv_timeout(POLL) {
+            Ok(Part::Total(value)) => total = value,
+            Ok(Part::Data(buffer)) => {
+                file.write_all(&buffer)?;
+                downloaded += buffer.len() as u64;
+                last_data = std::time::Instant::now();
+            }
+            Ok(Part::Done) => return Ok(true),
+            Ok(Part::Failed(e)) => return Err(e),
+            Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
+                if last_data.elapsed() > STALL {
+                    return Err(Error::Other(format!("The download received nothing for {} seconds.", STALL.as_secs())));
+                }
+            }
+            Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => return Err(Error::Other("The download stopped unexpectedly.".into())),
+        }
+        if !progress(downloaded, total) {
+            return Ok(false);
+        }
+    }
+}
+
 fn get_download_agent(options: Option<&HttpOptions>) -> Result<ureq::Agent, Error> {
     // let tls_builder = native_tls::TlsConnector::builder();
     // let tls_connector = tls_builder.build()?;
@@ -202,4 +276,20 @@ fn test_successful_download() {
     // Verify that the downloaded file has the expected size
     let metadata = tmpfile.path().metadata().unwrap();
     assert_eq!(metadata.len(), 10240, "Downloaded file size should match the expected content size");
+}
+
+#[test]
+fn test_download_while_reports_bytes_and_stops_when_asked() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    let file = tmp.path().join("file");
+    let url = "https://dotnetcli.blob.core.windows.net/dotnet/WindowsDesktop/5.0/latest.version";
+    let mut seen = 0;
+    assert!(download_url_to_file_while(url, &file, |done, _| {
+        seen = done;
+        true
+    })
+    .unwrap());
+    assert_eq!(std::fs::read_to_string(&file).unwrap().trim(), "5.0.17");
+    assert_eq!(seen, std::fs::metadata(&file).unwrap().len());
+    assert!(!download_url_to_file_while(url, &file, |_, _| false).unwrap());
 }
