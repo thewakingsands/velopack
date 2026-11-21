@@ -305,6 +305,37 @@ mod tests {
         }
     }
 
+    /// Every window names the application it belongs to, in its heading or its text. The only
+    /// windows that cannot are the errors raised before the package has been read.
+    #[test]
+    fn every_window_names_the_app_in_english_and_simplified_chinese() {
+        let windows: &[&[&str]] = &[
+            &[SPLASH_HEADER, SPLASH_BODY],
+            &[APPLY_HEADER, APPLY_BODY],
+            &[RUNTIME_PREPARE_HEADER, RUNTIME_PREPARE_BODY],
+            &[RUNTIME_FAILED_HEADER],
+            &[OVERWRITE_ALREADY_INSTALLED, OVERWRITE_REPAIR_BODY],
+            &[OVERWRITE_OLDER_INSTALLED, OVERWRITE_UPDATE_BODY],
+            &[OVERWRITE_NEWER_INSTALLED, OVERWRITE_DOWNGRADE_BODY],
+            &[UNINSTALL_PROGRESS_HEADER, UNINSTALL_PROGRESS_BODY],
+            &[UNINSTALL_HEADER, UNINSTALL_BODY],
+            &[UNINSTALL_ERRORS_HEADER, UNINSTALL_ERRORS_BODY],
+            &[SETUP_ERROR_HEADER],
+            &[START_CORRUPT_HEADER, START_CORRUPT_BODY],
+            &[ELEVATE_HEADER, ELEVATE_BODY],
+            &[RESTART_HEADER, RESTART_BODY],
+            &[MISSING_DEPS_HEADER, MISSING_DEPS_BODY],
+            &[DEPS_DOWNLOAD_HEADER, DEPS_DOWNLOAD_BODY],
+            &[INSTALL_HOOK_HEADER, INSTALL_HOOK_BODY],
+        ];
+        for (lang_tag, ftl_source) in [("en-US", EN_US_FTL), ("zh-CN", ZH_CN_FTL)] {
+            let names_app = |key: &str| ftl_source.lines().any(|line| line.starts_with(&format!("{key} = ")) && line.contains("{ $app_title }"));
+            for window in windows {
+                assert!(window.iter().any(|key| names_app(key)), "Locale '{lang_tag}': no text of {window:?} names the app");
+            }
+        }
+    }
+
     #[test]
     fn fork_keys_present_in_english_and_simplified_chinese() {
         for (lang_tag, ftl_source) in [("en-US", EN_US_FTL), ("zh-CN", ZH_CN_FTL)] {

@@ -15,20 +15,20 @@ btn-open-log = 查看日志
 btn-open-install-dir = 打开安装位置
 btn-ok = 确定
 # Elevation (dialogs_common.rs)
-elevate-header = 需要管理员权限
-elevate-body = 将 { $app_title } 更新到 { $app_version } 需要管理员权限。是否继续？
+elevate-header = 更新 { $app_title } 需要管理员权限
+elevate-body = 更新到 { $app_version } 需要管理员权限。是否继续？
 
 # Restart required (prerequisite.rs)
-restart-header = 需要重新启动电脑
-restart-body = 继续安装前需要重新启动电脑。请在重新启动后再次运行安装程序。
+restart-header = 安装 { $app_title } 需要重新启动电脑
+restart-body = 请在重新启动电脑后再次运行安装程序。
 
 # Missing dependencies (prerequisite.rs)
-missing-deps-header = 需要安装其他组件
-missing-deps-body = { $app_title } 依赖以下组件：{ $deps }。是否现在下载并安装？
+missing-deps-header = { $app_title } 需要其他组件
+missing-deps-body = 运行 { $app_title } 需要以下组件：{ $deps }。是否现在下载并安装？
 
 # Uninstall with errors (uninstall)
-uninstall-errors-header = 卸载已完成，部分文件未能移除
-uninstall-errors-body = { $app_title } 已卸载，但有文件或文件夹仍被占用，未能移除。可以在关闭相关程序后手动删除。
+uninstall-errors-header = { $app_title } 已卸载，部分文件未能移除
+uninstall-errors-body = 有文件或文件夹仍被占用，未能移除。可以在关闭相关程序后手动删除。
 uninstall-errors-log = 详细信息已保存至：{ $path }
 
 # Overwrite/repair dialog (install.rs)
@@ -41,7 +41,7 @@ overwrite-downgrade-body = 这台电脑上已安装 { $old_version }，比此安
 overwrite-footer = 安装位置：{ $path }
 
 # Uninstall complete (uninstall.rs)
-uninstall-header = 卸载完成
+uninstall-header = { $app_title } 已卸载
 uninstall-body = 应用已从这台电脑移除。
 
 # Uninstall progress (uninstall.rs)
@@ -49,7 +49,7 @@ uninstall-progress-header = 正在卸载 { $app_title }
 uninstall-progress-body = 正在移除文件和快捷方式…
 
 # Install hook failed (install.rs)
-install-hook-header = 安装已完成，部分步骤未成功
+install-hook-header = { $app_title } 已安装，部分步骤未成功
 install-hook-body = 如果应用无法正常使用，请重新安装。
 
 # Splash fallback (splash.rs)
@@ -57,22 +57,22 @@ splash-header = 正在安装 { $app_title }
 splash-body = 正在安装 { $app_title } { $app_version }，请稍候…
 
 # Dependency download (prerequisite.rs)
-deps-download-header = 正在下载所需组件
+deps-download-header = 正在下载 { $app_title } 所需的组件
 deps-download-body = 正在下载 { $dep_name }…
 
 # Apply progress (apply_*_impl.rs)
-apply-header = 正在安装更新
+apply-header = 正在更新 { $app_title }
 apply-body = 正在更新到 { $app_version }，请稍候…
 
 # Start error (start_windows_impl.rs)
-start-corrupt-header = 未能启动应用
+start-corrupt-header = 未能启动 { $app_title }
 start-corrupt-body = 部分文件缺失或无法读取。请重新安装以恢复。
 
 # Generic error
 error-header = 未能完成操作
 
 # Setup error (wix msi)
-setup-error-header = 安装未能完成
+setup-error-header = 未能安装 { $app_title }
 setup-disk-space-insufficient = 安装 { $app_title } 需要 { $required_space } 的可用空间，当前仅有 { $available_space }。请释放磁盘空间后重试。
 setup-windows-version-unsupported = 此安装程序需要 Windows 7 SP1 或更高版本。
 setup-embedded-zip-missing = 安装程序不完整，缺少安装包。请重新下载安装程序。

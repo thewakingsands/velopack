@@ -135,7 +135,7 @@ fn show_progress_dialog_ex(title: &str, header: &str, body: &str, cancellable: b
 
 pub fn show_apply_progress(app_name: &str, version: &str) -> Box<dyn ProgressReporter> {
     let title = crate::locale_strings::title_update(app_name);
-    let header = crate::locale_strings::apply_header();
+    let header = crate::locale_strings::apply_header(app_name);
     let body = crate::locale_strings::apply_body(version);
     show_progress_dialog_ex(&title, &header, &body, true)
 }
@@ -164,13 +164,14 @@ pub fn show_uninstall_progress(app_name: &str) -> Box<dyn ProgressReporter> {
     reporter
 }
 
-pub fn show_deps_download_progress(dep_name: &str, is_update: bool) -> Box<dyn ProgressReporter> {
+/// `app_name` is the app the component is for; it is named in the dialog.
+pub fn show_deps_download_progress(app_name: &str, dep_name: &str, is_update: bool) -> Box<dyn ProgressReporter> {
     let title = if is_update {
         crate::locale_strings::title_update(dep_name)
     } else {
         crate::locale_strings::title_setup(dep_name)
     };
-    let header = crate::locale_strings::deps_download_header();
+    let header = crate::locale_strings::deps_download_header(app_name);
     let body = crate::locale_strings::deps_download_body(dep_name);
     show_progress_dialog(&title, &header, &body)
 }

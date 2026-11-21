@@ -19,7 +19,7 @@ elevate-header = Administrator Permission Required
 elevate-body = { $app_title } needs administrator permission to install version { $app_version }. Allow this update to continue?
 
 # Restart required (prerequisite.rs)
-restart-header = Restart Required
+restart-header = Restart Required to Install { $app_title }
 restart-body = Your computer needs to restart before setup can continue. Please restart your computer and run setup again.
 
 # Missing dependencies (prerequisite.rs)
@@ -41,7 +41,7 @@ overwrite-downgrade-body = Version { $old_version } is currently installed, whic
 overwrite-footer = Installed at: { $path }
 
 # Uninstall complete (uninstall.rs)
-uninstall-header = Uninstall Complete
+uninstall-header = { $app_title } Has Been Uninstalled
 uninstall-body = The application has been successfully removed from your computer.
 
 # Uninstall progress (uninstall.rs)
@@ -49,7 +49,7 @@ uninstall-progress-header = Uninstalling { $app_title }
 uninstall-progress-body = Removing files and shortcuts, please wait...
 
 # Install hook failed (install.rs)
-install-hook-header = Install Partially Succeeded
+install-hook-header = { $app_title } Was Installed, Some Steps Failed
 install-hook-body = Installation has completed, but some steps may have failed. If the application does not work correctly you can try re-installing or contacting the application author.
 
 # Splash fallback (splash.rs)
@@ -57,22 +57,22 @@ splash-header = Installing { $app_title }
 splash-body = Setting up { $app_title } { $app_version }, please wait...
 
 # Dependency download (prerequisite.rs)
-deps-download-header = Downloading Required Component
+deps-download-header = Downloading a Component { $app_title } Requires
 deps-download-body = Downloading { $dep_name }, please wait...
 
 # Apply progress (apply_*_impl.rs)
-apply-header = Installing Update
+apply-header = Updating { $app_title }
 apply-body = Updating to version { $app_version }, please wait...
 
 # Start error (start_windows_impl.rs)
-start-corrupt-header = Installation Damaged
+start-corrupt-header = { $app_title } Could Not Start
 start-corrupt-body = This application cannot start because some of its files are missing or damaged. Please reinstall the application to fix this.
 
 # Generic error
 error-header = Something Went Wrong
 
 # Setup error (wix msi)
-setup-error-header = Setup Could Not Continue
+setup-error-header = { $app_title } Could Not Be Installed
 setup-disk-space-insufficient = { $app_title } requires at least { $required_space } disk space to be installed. There is only { $available_space } available.
 setup-windows-version-unsupported = This installer requires Windows 7 SP1 or later and cannot run.
 setup-embedded-zip-missing = Could not find embedded zip file. Please contact the application author.

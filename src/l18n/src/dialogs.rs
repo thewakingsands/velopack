@@ -115,7 +115,7 @@ pub fn ask_user_to_elevate(app_title: &str, new_version: &str) -> Result<()> {
     }
 
     let title = locale_strings::title_update(app_title);
-    let header = locale_strings::elevate_header();
+    let header = locale_strings::elevate_header(app_title);
     let body = locale_strings::elevate_body(app_title, new_version);
     let ok_text = locale_strings::btn_install_update();
 
@@ -130,7 +130,7 @@ pub fn ask_user_to_elevate(app_title: &str, new_version: &str) -> Result<()> {
 
 pub fn show_restart_required(app_name: &str, _app_version: &str) {
     let title = locale_strings::title_setup(app_name);
-    let header = locale_strings::restart_header();
+    let header = locale_strings::restart_header(app_name);
     let body = locale_strings::restart_body();
     show_warn(&title, &header, &body);
 }
@@ -142,7 +142,7 @@ pub fn show_update_missing_dependencies_dialog(app_name: &str, dependency_string
     }
 
     let title = locale_strings::title_update(app_name);
-    let header = locale_strings::missing_deps_header();
+    let header = locale_strings::missing_deps_header(app_name);
     let body = locale_strings::missing_deps_body(app_name, dependency_string);
     let button = locale_strings::btn_install();
     show_ok_cancel(&title, &header, &body, Some(&button))
@@ -154,7 +154,7 @@ pub fn show_setup_missing_dependencies_dialog(app_name: &str, _app_version: &str
     }
 
     let title = locale_strings::title_setup(app_name);
-    let header = locale_strings::missing_deps_header();
+    let header = locale_strings::missing_deps_header(app_name);
     let body = locale_strings::missing_deps_body(app_name, dependency_string);
     let button = locale_strings::btn_install();
     show_ok_cancel(&title, &header, &body, Some(&button))
@@ -166,7 +166,7 @@ pub fn show_uninstall_complete_with_errors_dialog(app_title: &str, log_path: Opt
     }
 
     let title = locale_strings::title_uninstall(app_title);
-    let header = locale_strings::uninstall_errors_header();
+    let header = locale_strings::uninstall_errors_header(app_title);
     let body = locale_strings::uninstall_errors_body(app_title);
 
     let has_log = log_path.map(|p| p.exists()).unwrap_or(false);
@@ -257,21 +257,21 @@ pub fn show_generic_error(program_name: &str, error_string: &str) {
 
 pub fn show_install_hook_warning(app_title: &str) {
     let title = locale_strings::title_setup(app_title);
-    let header = locale_strings::install_hook_header();
+    let header = locale_strings::install_hook_header(app_title);
     let body = locale_strings::install_hook_body();
     show_warn(&title, &header, &body);
 }
 
 pub fn show_uninstall_complete(app_title: &str) {
     let title = locale_strings::title_uninstall(app_title);
-    let header = locale_strings::uninstall_header();
+    let header = locale_strings::uninstall_header(app_title);
     let body = locale_strings::uninstall_body();
     show_info(&title, &header, &body);
 }
 
 pub fn show_setup_error(app_title: &str, error_string: &str) {
     let title = locale_strings::title_setup(app_title);
-    let header = locale_strings::setup_error_header();
+    let header = locale_strings::setup_error_header(app_title);
     show_error(&title, &header, error_string);
 }
 
@@ -288,7 +288,7 @@ pub fn show_runtime_failed(app_title: &str, body: &str) -> bool {
 }
 
 pub fn show_start_corrupt_error(app_title: &str) {
-    let header = locale_strings::start_corrupt_header();
+    let header = locale_strings::start_corrupt_header(app_title);
     let body = locale_strings::start_corrupt_body();
     show_error(app_title, &header, &body);
 }

@@ -40,44 +40,62 @@ pub fn btn_ok() -> String {
     format_message(BTN_OK, None)
 }
 
-pub fn elevate_header() -> String {
-    format_message(ELEVATE_HEADER, None)
+pub fn elevate_header(app: &str) -> String {
+    let mut args = FluentArgs::new();
+    args.set("app_title", app.to_string());
+    format_message(ELEVATE_HEADER, Some(&args))
 }
 
-pub fn restart_header() -> String {
-    format_message(RESTART_HEADER, None)
+pub fn restart_header(app: &str) -> String {
+    let mut args = FluentArgs::new();
+    args.set("app_title", app.to_string());
+    format_message(RESTART_HEADER, Some(&args))
 }
 
-pub fn missing_deps_header() -> String {
-    format_message(MISSING_DEPS_HEADER, None)
+pub fn missing_deps_header(app: &str) -> String {
+    let mut args = FluentArgs::new();
+    args.set("app_title", app.to_string());
+    format_message(MISSING_DEPS_HEADER, Some(&args))
 }
 
-pub fn uninstall_errors_header() -> String {
-    format_message(UNINSTALL_ERRORS_HEADER, None)
+pub fn uninstall_errors_header(app: &str) -> String {
+    let mut args = FluentArgs::new();
+    args.set("app_title", app.to_string());
+    format_message(UNINSTALL_ERRORS_HEADER, Some(&args))
 }
 
 pub fn error_header() -> String {
     format_message(ERROR_HEADER, None)
 }
 
-pub fn setup_error_header() -> String {
-    format_message(SETUP_ERROR_HEADER, None)
+pub fn setup_error_header(app: &str) -> String {
+    let mut args = FluentArgs::new();
+    args.set("app_title", app.to_string());
+    format_message(SETUP_ERROR_HEADER, Some(&args))
 }
 
-pub fn install_hook_header() -> String {
-    format_message(INSTALL_HOOK_HEADER, None)
+pub fn install_hook_header(app: &str) -> String {
+    let mut args = FluentArgs::new();
+    args.set("app_title", app.to_string());
+    format_message(INSTALL_HOOK_HEADER, Some(&args))
 }
 
-pub fn uninstall_header() -> String {
-    format_message(UNINSTALL_HEADER, None)
+pub fn uninstall_header(app: &str) -> String {
+    let mut args = FluentArgs::new();
+    args.set("app_title", app.to_string());
+    format_message(UNINSTALL_HEADER, Some(&args))
 }
 
-pub fn start_corrupt_header() -> String {
-    format_message(START_CORRUPT_HEADER, None)
+pub fn start_corrupt_header(app: &str) -> String {
+    let mut args = FluentArgs::new();
+    args.set("app_title", app.to_string());
+    format_message(START_CORRUPT_HEADER, Some(&args))
 }
 
-pub fn apply_header() -> String {
-    format_message(APPLY_HEADER, None)
+pub fn apply_header(app: &str) -> String {
+    let mut args = FluentArgs::new();
+    args.set("app_title", app.to_string());
+    format_message(APPLY_HEADER, Some(&args))
 }
 
 pub fn restart_body() -> String {
@@ -212,8 +230,10 @@ pub fn splash_body(app: &str, version: &str) -> String {
     format_message(SPLASH_BODY, Some(&args))
 }
 
-pub fn deps_download_header() -> String {
-    format_message(DEPS_DOWNLOAD_HEADER, None)
+pub fn deps_download_header(app: &str) -> String {
+    let mut args = FluentArgs::new();
+    args.set("app_title", app.to_string());
+    format_message(DEPS_DOWNLOAD_HEADER, Some(&args))
 }
 
 pub fn deps_download_body(dep_name: &str) -> String {
