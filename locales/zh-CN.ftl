@@ -2,86 +2,86 @@
 title-update = { $app_title } 更新
 title-setup = { $app_title } 安装
 title-uninstall = { $app_title } 卸载
-error-title = { $program_name } 错误
+error-title = 安装程序
 
 # Shared buttons
 btn-cancel = 取消
 btn-install-update = 安装更新
 btn-install = 安装
 btn-update = 更新
-btn-downgrade = 降级
-btn-repair = 修复
-btn-open-log = 打开日志
-btn-open-install-dir = 打开安装目录
+btn-downgrade = 安装旧版本
+btn-repair = 重新安装
+btn-open-log = 查看日志
+btn-open-install-dir = 打开安装位置
 btn-ok = 确定
 # Elevation (dialogs_common.rs)
-elevate-header = 需要管理员权限
-elevate-body = 安装 { $app_title } 版本 { $app_version } 需要管理员权限。是否允许继续此更新?
+elevate-header = 更新 { $app_title } 需要管理员权限
+elevate-body = 更新到 { $app_version } 需要管理员权限。是否继续？
 
 # Restart required (prerequisite.rs)
-restart-header = 需要重新启动
-restart-body = 在继续安装之前需要重新启动计算机。请重新启动计算机后再次运行安装程序。
+restart-header = 安装 { $app_title } 需要重新启动电脑
+restart-body = 请在重新启动电脑后再次运行安装程序。
 
 # Missing dependencies (prerequisite.rs)
-missing-deps-header = 需要其他组件
-missing-deps-body = { $app_title } 需要先安装以下组件: { $deps }。是否立即下载并安装它们?
+missing-deps-header = { $app_title } 需要其他组件
+missing-deps-body = 运行 { $app_title } 需要以下组件：{ $deps }。是否现在下载并安装？
 
 # Uninstall with errors (uninstall)
-uninstall-errors-header = 卸载完成，但出现问题
-uninstall-errors-body = { $app_title } 已卸载，但部分文件或文件夹无法删除。您可以手动删除它们，或者重新安装应用程序后再尝试卸载。
-uninstall-errors-log = 详细信息已保存到: { $path }
+uninstall-errors-header = { $app_title } 已卸载，部分文件未能移除
+uninstall-errors-body = 有文件或文件夹仍被占用，未能移除。可以在关闭相关程序后手动删除。
+uninstall-errors-log = 详细信息已保存至：{ $path }
 
 # Overwrite/repair dialog (install.rs)
-overwrite-already-installed = { $app_title } 已安装
-overwrite-repair-body = 此应用程序已安装在您的计算机上。如果它无法正常工作，您可以尝试通过重新安装来修复它。
-overwrite-older-installed = { $app_title } 已安装
-overwrite-update-body = 当前已安装版本 { $old_version }。是否要更新到版本 { $app_version }?
-overwrite-newer-installed = 已安装更新版本的 { $app_title }
-overwrite-downgrade-body = 当前已安装版本 { $old_version }，它比此安装程序更新。不建议降级，可能会导致问题。是否仍要继续?
-overwrite-footer = 安装位置: { $path }
+overwrite-already-installed = 已安装 { $app_title }
+overwrite-repair-body = 这台电脑上已安装相同版本。如果使用中遇到问题，可以重新安装。
+overwrite-older-installed = 已安装 { $app_title }
+overwrite-update-body = 这台电脑上已安装 { $old_version }。是否更新到 { $app_version }？
+overwrite-newer-installed = 已安装较新版本的 { $app_title }
+overwrite-downgrade-body = 这台电脑上已安装 { $old_version }，比此安装程序提供的版本新。安装旧版本可能导致现有数据无法使用，是否继续？
+overwrite-footer = 安装位置：{ $path }
 
 # Uninstall complete (uninstall.rs)
-uninstall-header = 卸载完成
-uninstall-body = 应用程序已成功从您的计算机中删除。
+uninstall-header = { $app_title } 已卸载
+uninstall-body = 应用已从这台电脑移除。
 
 # Uninstall progress (uninstall.rs)
 uninstall-progress-header = 正在卸载 { $app_title }
-uninstall-progress-body = 正在删除文件和快捷方式，请稍候...
+uninstall-progress-body = 正在移除文件和快捷方式…
 
 # Install hook failed (install.rs)
-install-hook-header = 安装部分成功
-install-hook-body = 安装已完成，但某些步骤可能已失败。如果应用程序无法正常工作，您可以尝试重新安装或联系应用程序作者。
+install-hook-header = { $app_title } 已安装，部分步骤未成功
+install-hook-body = 如果应用无法正常使用，请重新安装。
 
 # Splash fallback (splash.rs)
 splash-header = 正在安装 { $app_title }
-splash-body = 正在设置 { $app_title } { $app_version }，请稍候...
+splash-body = 正在安装 { $app_title } { $app_version }，请稍候…
 
 # Dependency download (prerequisite.rs)
-deps-download-header = 正在下载所需组件
-deps-download-body = 正在下载 { $dep_name }，请稍候...
+deps-download-header = 正在下载 { $app_title } 所需的组件
+deps-download-body = 正在下载 { $dep_name }…
 
 # Apply progress (apply_*_impl.rs)
-apply-header = 正在安装更新
-apply-body = 正在更新到版本 { $app_version }，请稍候...
+apply-header = 正在更新 { $app_title }
+apply-body = 正在更新到 { $app_version }，请稍候…
 
 # Start error (start_windows_impl.rs)
-start-corrupt-header = 安装已损坏
-start-corrupt-body = 此应用程序无法启动，因为它的某些文件丢失或已损坏。请重新安装应用程序以解决此问题。
+start-corrupt-header = 未能启动 { $app_title }
+start-corrupt-body = 部分文件缺失或无法读取。请重新安装以恢复。
 
 # Generic error
-error-header = 出现问题
+error-header = 未能完成操作
 
 # Setup error (wix msi)
-setup-error-header = 无法继续安装
-setup-disk-space-insufficient = 安装 { $app_title } 至少需要 { $required_space } 磁盘空间。当前仅有 { $available_space } 可用。
-setup-windows-version-unsupported = 此安装程序需要 Windows 7 SP1 或更高版本，无法运行。
-setup-embedded-zip-missing = 找不到嵌入的 zip 文件。请联系应用程序作者。
-setup-os-version-required = 此应用程序需要 Windows { $os_version } 或更高版本。
-setup-cpu-arch-unsupported = 此应用程序 ({ $machine_arch }) 不支持您的 CPU 架构。
-setup-stop-app-failed = 无法停止应用程序 ({ $error })，请关闭应用程序后再次运行安装程序。
-setup-remove-dir-failed = 无法删除现有的应用程序目录，请关闭应用程序后再次运行安装程序。如果问题仍然存在，请先通过“程序和功能”卸载，或重新启动计算机。
-setup-update-exe-missing = 此安装程序缺少关键的二进制文件 (Update.exe)。请联系应用程序作者。
-setup-main-exe-missing = 在程序包中找不到主可执行文件。请联系应用程序作者。
+setup-error-header = 未能安装 { $app_title }
+setup-disk-space-insufficient = 安装 { $app_title } 需要 { $required_space } 的可用空间，当前仅有 { $available_space }。请释放磁盘空间后重试。
+setup-windows-version-unsupported = 此安装程序需要 Windows 7 SP1 或更高版本。
+setup-embedded-zip-missing = 安装程序不完整，缺少安装包。请重新下载安装程序。
+setup-os-version-required = 此应用需要 Windows { $os_version } 或更高版本。
+setup-cpu-arch-unsupported = 此应用（{ $machine_arch }）不支持这台电脑的处理器架构。
+setup-stop-app-failed = 未能关闭正在运行的应用（{ $error }）。请手动关闭后重新运行安装程序。
+setup-remove-dir-failed = 未能移除现有的安装目录。请关闭应用后重新运行安装程序；如果问题仍然存在，请先在系统设置中卸载，或重新启动电脑。
+setup-update-exe-missing = 安装程序不完整，缺少更新程序（Update.exe）。请重新下载安装程序。
+setup-main-exe-missing = 安装包不完整，缺少主程序。请重新下载安装程序。
 
 # MSI Installer UI - Common
 msi-dlg-title = { $app_title } 安装程序
@@ -232,3 +232,22 @@ msi-readme-description = 请在继续之前阅读以下信息。
 
 # MSI Installer UI - Downgrade Error
 msi-downgrade-error = 已安装较新版本的 { $app_title }。
+
+# Runtime download (install.rs, apply_windows_impl.rs, start_windows_impl.rs)
+btn-retry = 重试
+progress-cancelling = 正在取消…
+runtime-prepare-header = 正在准备 { $app_title }
+runtime-prepare-body = 正在检查运行环境…
+runtime-download-starting = 正在下载运行环境…
+runtime-downloading = 正在下载运行环境：{ $done } / { $total }
+runtime-downloading-unknown = 正在下载运行环境：已下载 { $done }
+runtime-verifying = 正在校验下载的文件…
+runtime-unpacking = 正在解压运行环境…
+runtime-finishing = 即将完成…
+runtime-failed-header = 未能启动 { $app_title }
+runtime-failed-download = 运行环境下载未完成。请检查网络连接后重试。
+runtime-failed-invalid = 下载的文件未通过校验。请重试。
+runtime-failed-other = 未能准备运行环境。请确认安装位置可以写入后重试。
+setup-runtime-download = 运行环境下载未完成。请检查网络连接后重新运行安装程序。
+setup-runtime-invalid = 下载的文件未通过校验。请重新运行安装程序。
+setup-runtime-other = 未能准备运行环境。请确认安装位置可以写入后重新运行安装程序。

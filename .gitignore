@@ -522,3 +522,11 @@ tests/Test.xml
 launchsettings.json
 # standalone rust test harness (excluded from workspace; its lock is throwaway)
 test/Velopack.Deployment.Tests/harnesses/rust/Cargo.lock
+
+# The Setup, Update and stub executables a packaging build puts next to the vendored tools.
+/vendor/setup*.exe
+/vendor/update*.exe
+/vendor/stub*.exe
+
+# A lockfile from running the tests of the xdialog copy on its own.
+/src/xdialog/Cargo.lock

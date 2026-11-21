@@ -159,6 +159,28 @@ pub fn apply_package_impl(old_locator: &VelopackLocator, package: &PathBuf, hook
 
         reporter.set_indeterminate();
 
+        // A package without a main executable names a runtime: take it from the installed version, or
+        // download it, while the installed version is still untouched. Its icon and version come from
+        // the stub of the new package.
+        let stub_dir = old_locator.get_temp_dir_rand16();
+        let runtime = fs::create_dir_all(&stub_dir).map_err(anyhow::Error::from).and_then(|_| Ok(bundle.extract_stubs_to_dir(&stub_dir)?)).and_then(|_| {
+            crate::windows::runtime::prepare(
+                &crate::windows::runtime::Request {
+                    app_dir: &temp_path_new,
+                    locator: &new_locator,
+                    previous_app_dir: Some(&current_dir),
+                    previous_root: Some(&root_path),
+                    stub: &crate::windows::runtime::stub_path(&stub_dir, &new_locator),
+                },
+                reporter.as_ref(),
+            )
+        });
+        remove_temp_dir_timed(&stub_dir);
+        runtime?;
+        // From here the installed version is replaced, which cannot be cancelled half way.
+        dialogs::progress::disallow_cancel();
+        reporter.set_indeterminate();
+
         // second, run application hooks (but don't care if it fails)
         if hook_mode == super::HookRunMode::All {
             crate::windows::run_hook(old_locator, constants::HOOK_CLI_OBSOLETE, 15);
@@ -198,6 +220,9 @@ pub fn apply_package_impl(old_locator: &VelopackLocator, package: &PathBuf, hook
         if !old_locator.get_is_portable() {
             crate::windows::create_or_update_manifest_lnks(&new_locator, Some(old_locator));
         }
+
+        // The releases before this layout kept the runtime outside `current`.
+        crate::shared::runtime::remove_legacy_cache(&root_path);
 
         // done!
         info!("Package applied successfully.");

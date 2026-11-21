@@ -30,6 +30,10 @@ pub enum SetupError {
     UpdateExeMissing { app_title: String },
     #[error("The main executable could not be found in the package. Please contact the application author.")]
     MainExeMissing { app_title: String },
+    /// The runtime the package names could not be downloaded or put in place. `message` is already in
+    /// the system's language; the error behind it was logged where it happened.
+    #[error("The runtime of the application could not be prepared.")]
+    RuntimeFailed { app_title: String, message: String },
 }
 
 impl SetupError {
@@ -43,7 +47,8 @@ impl SetupError {
             | SetupError::StopApplicationFailed { app_title, .. }
             | SetupError::RemoveExistingDirFailed { app_title }
             | SetupError::UpdateExeMissing { app_title }
-            | SetupError::MainExeMissing { app_title } => Some(app_title),
+            | SetupError::MainExeMissing { app_title }
+            | SetupError::RuntimeFailed { app_title, .. } => Some(app_title),
         }
     }
 
@@ -63,6 +68,7 @@ impl SetupError {
             SetupError::RemoveExistingDirFailed { .. } => locale_strings::setup_remove_dir_failed(),
             SetupError::UpdateExeMissing { .. } => locale_strings::setup_update_exe_missing(),
             SetupError::MainExeMissing { .. } => locale_strings::setup_main_exe_missing(),
+            SetupError::RuntimeFailed { message, .. } => message.clone(),
         }
     }
 }
@@ -100,6 +106,10 @@ mod tests {
             },
             SetupError::MainExeMissing {
                 app_title: "MyApp".to_string(),
+            },
+            SetupError::RuntimeFailed {
+                app_title: "MyApp".to_string(),
+                message: "The download did not complete.".to_string(),
             },
         ]
     }

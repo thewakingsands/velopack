@@ -25,6 +25,12 @@ pub fn run_hook(locator: &VelopackLocator, hook_name: &str, timeout_secs: u64) -
     let args: Vec<OsString> = vec![hook_name.into(), ver_string.into()];
     let mut success = false;
 
+    // The main executable of such a package is a runtime that knows no hooks: it would start the app.
+    if current_path.join(crate::shared::runtime::SPEC_FILE).is_file() {
+        info!("Skipping the {} hook: the main executable is a downloaded runtime.", hook_name);
+        return true;
+    }
+
     info!("Running {} hook...", hook_name);
     let cmd = process::run_process(main_exe_path, args, Some(current_path), false, None);
 

@@ -40,44 +40,62 @@ pub fn btn_ok() -> String {
     format_message(BTN_OK, None)
 }
 
-pub fn elevate_header() -> String {
-    format_message(ELEVATE_HEADER, None)
+pub fn elevate_header(app: &str) -> String {
+    let mut args = FluentArgs::new();
+    args.set("app_title", app.to_string());
+    format_message(ELEVATE_HEADER, Some(&args))
 }
 
-pub fn restart_header() -> String {
-    format_message(RESTART_HEADER, None)
+pub fn restart_header(app: &str) -> String {
+    let mut args = FluentArgs::new();
+    args.set("app_title", app.to_string());
+    format_message(RESTART_HEADER, Some(&args))
 }
 
-pub fn missing_deps_header() -> String {
-    format_message(MISSING_DEPS_HEADER, None)
+pub fn missing_deps_header(app: &str) -> String {
+    let mut args = FluentArgs::new();
+    args.set("app_title", app.to_string());
+    format_message(MISSING_DEPS_HEADER, Some(&args))
 }
 
-pub fn uninstall_errors_header() -> String {
-    format_message(UNINSTALL_ERRORS_HEADER, None)
+pub fn uninstall_errors_header(app: &str) -> String {
+    let mut args = FluentArgs::new();
+    args.set("app_title", app.to_string());
+    format_message(UNINSTALL_ERRORS_HEADER, Some(&args))
 }
 
 pub fn error_header() -> String {
     format_message(ERROR_HEADER, None)
 }
 
-pub fn setup_error_header() -> String {
-    format_message(SETUP_ERROR_HEADER, None)
+pub fn setup_error_header(app: &str) -> String {
+    let mut args = FluentArgs::new();
+    args.set("app_title", app.to_string());
+    format_message(SETUP_ERROR_HEADER, Some(&args))
 }
 
-pub fn install_hook_header() -> String {
-    format_message(INSTALL_HOOK_HEADER, None)
+pub fn install_hook_header(app: &str) -> String {
+    let mut args = FluentArgs::new();
+    args.set("app_title", app.to_string());
+    format_message(INSTALL_HOOK_HEADER, Some(&args))
 }
 
-pub fn uninstall_header() -> String {
-    format_message(UNINSTALL_HEADER, None)
+pub fn uninstall_header(app: &str) -> String {
+    let mut args = FluentArgs::new();
+    args.set("app_title", app.to_string());
+    format_message(UNINSTALL_HEADER, Some(&args))
 }
 
-pub fn start_corrupt_header() -> String {
-    format_message(START_CORRUPT_HEADER, None)
+pub fn start_corrupt_header(app: &str) -> String {
+    let mut args = FluentArgs::new();
+    args.set("app_title", app.to_string());
+    format_message(START_CORRUPT_HEADER, Some(&args))
 }
 
-pub fn apply_header() -> String {
-    format_message(APPLY_HEADER, None)
+pub fn apply_header(app: &str) -> String {
+    let mut args = FluentArgs::new();
+    args.set("app_title", app.to_string());
+    format_message(APPLY_HEADER, Some(&args))
 }
 
 pub fn restart_body() -> String {
@@ -212,8 +230,10 @@ pub fn splash_body(app: &str, version: &str) -> String {
     format_message(SPLASH_BODY, Some(&args))
 }
 
-pub fn deps_download_header() -> String {
-    format_message(DEPS_DOWNLOAD_HEADER, None)
+pub fn deps_download_header(app: &str) -> String {
+    let mut args = FluentArgs::new();
+    args.set("app_title", app.to_string());
+    format_message(DEPS_DOWNLOAD_HEADER, Some(&args))
 }
 
 pub fn deps_download_body(dep_name: &str) -> String {
@@ -272,4 +292,83 @@ pub fn setup_update_exe_missing() -> String {
 
 pub fn setup_main_exe_missing() -> String {
     format_message(SETUP_MAIN_EXE_MISSING, None)
+}
+
+// --- Messages of the runtime download (this fork) ---
+
+pub fn btn_retry() -> String {
+    format_message(BTN_RETRY, None)
+}
+
+pub fn progress_cancelling() -> String {
+    format_message(PROGRESS_CANCELLING, None)
+}
+
+pub fn runtime_prepare_body() -> String {
+    format_message(RUNTIME_PREPARE_BODY, None)
+}
+
+pub fn runtime_prepare_header(app: &str) -> String {
+    let mut args = FluentArgs::new();
+    args.set("app_title", app.to_string());
+    format_message(RUNTIME_PREPARE_HEADER, Some(&args))
+}
+
+pub fn runtime_download_starting() -> String {
+    format_message(RUNTIME_DOWNLOAD_STARTING, None)
+}
+
+/// `done` and `total` are sizes already formatted for display.
+pub fn runtime_downloading(done: &str, total: Option<&str>) -> String {
+    let mut args = FluentArgs::new();
+    args.set("done", done.to_string());
+    match total {
+        Some(total) => {
+            args.set("total", total.to_string());
+            format_message(RUNTIME_DOWNLOADING, Some(&args))
+        }
+        None => format_message(RUNTIME_DOWNLOADING_UNKNOWN, Some(&args)),
+    }
+}
+
+pub fn runtime_verifying() -> String {
+    format_message(RUNTIME_VERIFYING, None)
+}
+
+pub fn runtime_unpacking() -> String {
+    format_message(RUNTIME_UNPACKING, None)
+}
+
+pub fn runtime_finishing() -> String {
+    format_message(RUNTIME_FINISHING, None)
+}
+
+pub fn runtime_failed_header(app: &str) -> String {
+    let mut args = FluentArgs::new();
+    args.set("app_title", app.to_string());
+    format_message(RUNTIME_FAILED_HEADER, Some(&args))
+}
+
+pub fn runtime_failed_download() -> String {
+    format_message(RUNTIME_FAILED_DOWNLOAD, None)
+}
+
+pub fn runtime_failed_invalid() -> String {
+    format_message(RUNTIME_FAILED_INVALID, None)
+}
+
+pub fn runtime_failed_other() -> String {
+    format_message(RUNTIME_FAILED_OTHER, None)
+}
+
+pub fn setup_runtime_download() -> String {
+    format_message(SETUP_RUNTIME_DOWNLOAD, None)
+}
+
+pub fn setup_runtime_invalid() -> String {
+    format_message(SETUP_RUNTIME_INVALID, None)
+}
+
+pub fn setup_runtime_other() -> String {
+    format_message(SETUP_RUNTIME_OTHER, None)
 }

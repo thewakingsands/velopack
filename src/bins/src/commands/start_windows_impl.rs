@@ -109,6 +109,13 @@ pub fn start_impl(
 }
 
 fn start_regular(locator: LocatorResult, exe_name: Option<&OsString>, exe_args: Option<Vec<OsString>>, legacy_args: Option<&OsString>) -> Result<()> {
+    // An app whose runtime is downloaded gets a missing runtime and Start menu shortcut back here.
+    if let LocatorResult::Normal(app) = &locator {
+        if !win::runtime::repair_before_start(app) {
+            return Ok(());
+        }
+    }
+
     // we can't just run the normal start_package command, because legacy squirrel might provide
     // an "exe name" to restart which no longer exists in the package
     let exe_to_execute = locator.get_exe_to_start(exe_name)?;

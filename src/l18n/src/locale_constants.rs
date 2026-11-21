@@ -244,6 +244,46 @@ define_locale_keys! {
     MSI_DOWNGRADE_ERROR = "msi-downgrade-error",
 }
 
+/// Messages this fork adds. Only en-US and zh-CN carry them; every other locale shows the en-US text
+/// (see `localization::format_message`), so they stay out of `ALL_KEYS`.
+#[allow(dead_code)]
+pub const FORK_KEYS: &[&str] = &[
+    BTN_RETRY,
+    PROGRESS_CANCELLING,
+    RUNTIME_PREPARE_HEADER,
+    RUNTIME_PREPARE_BODY,
+    RUNTIME_DOWNLOAD_STARTING,
+    RUNTIME_DOWNLOADING,
+    RUNTIME_DOWNLOADING_UNKNOWN,
+    RUNTIME_VERIFYING,
+    RUNTIME_UNPACKING,
+    RUNTIME_FINISHING,
+    RUNTIME_FAILED_HEADER,
+    RUNTIME_FAILED_DOWNLOAD,
+    RUNTIME_FAILED_INVALID,
+    RUNTIME_FAILED_OTHER,
+    SETUP_RUNTIME_DOWNLOAD,
+    SETUP_RUNTIME_INVALID,
+    SETUP_RUNTIME_OTHER,
+];
+pub const BTN_RETRY: &str = "btn-retry";
+pub const PROGRESS_CANCELLING: &str = "progress-cancelling";
+pub const RUNTIME_PREPARE_HEADER: &str = "runtime-prepare-header";
+pub const RUNTIME_PREPARE_BODY: &str = "runtime-prepare-body";
+pub const RUNTIME_DOWNLOAD_STARTING: &str = "runtime-download-starting";
+pub const RUNTIME_DOWNLOADING: &str = "runtime-downloading";
+pub const RUNTIME_DOWNLOADING_UNKNOWN: &str = "runtime-downloading-unknown";
+pub const RUNTIME_VERIFYING: &str = "runtime-verifying";
+pub const RUNTIME_UNPACKING: &str = "runtime-unpacking";
+pub const RUNTIME_FINISHING: &str = "runtime-finishing";
+pub const RUNTIME_FAILED_HEADER: &str = "runtime-failed-header";
+pub const RUNTIME_FAILED_DOWNLOAD: &str = "runtime-failed-download";
+pub const RUNTIME_FAILED_INVALID: &str = "runtime-failed-invalid";
+pub const RUNTIME_FAILED_OTHER: &str = "runtime-failed-other";
+pub const SETUP_RUNTIME_DOWNLOAD: &str = "setup-runtime-download";
+pub const SETUP_RUNTIME_INVALID: &str = "setup-runtime-invalid";
+pub const SETUP_RUNTIME_OTHER: &str = "setup-runtime-other";
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -260,6 +300,49 @@ mod tests {
             bundle.add_resource(resource).unwrap();
 
             for key in ALL_KEYS {
+                assert!(bundle.get_message(key).is_some(), "Locale '{lang_tag}' is missing key '{key}'");
+            }
+        }
+    }
+
+    /// Every window names the application it belongs to, in its heading or its text. The only
+    /// windows that cannot are the errors raised before the package has been read.
+    #[test]
+    fn every_window_names_the_app_in_english_and_simplified_chinese() {
+        let windows: &[&[&str]] = &[
+            &[SPLASH_HEADER, SPLASH_BODY],
+            &[APPLY_HEADER, APPLY_BODY],
+            &[RUNTIME_PREPARE_HEADER, RUNTIME_PREPARE_BODY],
+            &[RUNTIME_FAILED_HEADER],
+            &[OVERWRITE_ALREADY_INSTALLED, OVERWRITE_REPAIR_BODY],
+            &[OVERWRITE_OLDER_INSTALLED, OVERWRITE_UPDATE_BODY],
+            &[OVERWRITE_NEWER_INSTALLED, OVERWRITE_DOWNGRADE_BODY],
+            &[UNINSTALL_PROGRESS_HEADER, UNINSTALL_PROGRESS_BODY],
+            &[UNINSTALL_HEADER, UNINSTALL_BODY],
+            &[UNINSTALL_ERRORS_HEADER, UNINSTALL_ERRORS_BODY],
+            &[SETUP_ERROR_HEADER],
+            &[START_CORRUPT_HEADER, START_CORRUPT_BODY],
+            &[ELEVATE_HEADER, ELEVATE_BODY],
+            &[RESTART_HEADER, RESTART_BODY],
+            &[MISSING_DEPS_HEADER, MISSING_DEPS_BODY],
+            &[DEPS_DOWNLOAD_HEADER, DEPS_DOWNLOAD_BODY],
+            &[INSTALL_HOOK_HEADER, INSTALL_HOOK_BODY],
+        ];
+        for (lang_tag, ftl_source) in [("en-US", EN_US_FTL), ("zh-CN", ZH_CN_FTL)] {
+            let names_app = |key: &str| ftl_source.lines().any(|line| line.starts_with(&format!("{key} = ")) && line.contains("{ $app_title }"));
+            for window in windows {
+                assert!(window.iter().any(|key| names_app(key)), "Locale '{lang_tag}': no text of {window:?} names the app");
+            }
+        }
+    }
+
+    #[test]
+    fn fork_keys_present_in_english_and_simplified_chinese() {
+        for (lang_tag, ftl_source) in [("en-US", EN_US_FTL), ("zh-CN", ZH_CN_FTL)] {
+            let resource = FluentResource::try_new(ftl_source.to_string()).unwrap();
+            let mut bundle = FluentBundle::new_concurrent(vec![lang_tag.parse::<UnicLanguageIdentifier>().unwrap()]);
+            bundle.add_resource(resource).unwrap();
+            for key in FORK_KEYS {
                 assert!(bundle.get_message(key).is_some(), "Locale '{lang_tag}' is missing key '{key}'");
             }
         }

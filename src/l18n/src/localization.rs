@@ -7,6 +7,8 @@ use std::sync::OnceLock;
 use unic_langid::LanguageIdentifier as UnicLanguageIdentifier;
 
 static BUNDLE: OnceLock<FluentBundle<FluentResource>> = OnceLock::new();
+/// en-US, for the messages the selected locale does not have.
+static FALLBACK: OnceLock<FluentBundle<FluentResource>> = OnceLock::new();
 
 const DEFAULT_LOCALE: (&str, &str) = ("en-US", EN_US_FTL);
 
@@ -33,25 +35,35 @@ fn negotiate_locale<'a>(requested: &str, available: &'a [(&'a str, &'a str)], de
 /// Detect the system locale and pick the best available .ftl resource.
 /// Falls back to en-US if no match.
 fn select_locale() -> (&'static str, &'static str) {
-    match sys_locale::get_locale() {
+    // VELOPACK_LOCALE (for example zh-CN) takes the place of the system's language: to look at the
+    // dialogs in a language the machine at hand is not set to.
+    match std::env::var("VELOPACK_LOCALE").ok().filter(|locale| !locale.is_empty()).or_else(sys_locale::get_locale) {
         Some(locale) => negotiate_locale(&locale, LOCALE_SOURCES, DEFAULT_LOCALE),
         None => DEFAULT_LOCALE,
     }
+}
+
+fn build_bundle(lang_tag: &str, ftl_source: &str) -> FluentBundle<FluentResource> {
+    let resource = FluentResource::try_new(ftl_source.to_string()).expect("Failed to parse Fluent resource");
+    let lang_id: UnicLanguageIdentifier = lang_tag.parse().expect("Failed to parse language identifier");
+    let mut bundle = FluentBundle::new_concurrent(vec![lang_id]);
+    // Disable Unicode bidi isolation characters (U+2068/U+2069) around placeables.
+    // Native OS dialog APIs (e.g. TaskDialog) render these as visible characters.
+    bundle.set_use_isolating(false);
+    bundle.add_resource(resource).expect("Failed to add Fluent resource");
+    bundle
 }
 
 fn get_bundle() -> &'static FluentBundle<FluentResource> {
     BUNDLE.get_or_init(|| {
         let (lang_tag, ftl_source) = select_locale();
         info!("Locale selected: {}", lang_tag);
-        let resource = FluentResource::try_new(ftl_source.to_string()).expect("Failed to parse Fluent resource");
-        let lang_id: UnicLanguageIdentifier = lang_tag.parse().expect("Failed to parse language identifier");
-        let mut bundle = FluentBundle::new_concurrent(vec![lang_id]);
-        // Disable Unicode bidi isolation characters (U+2068/U+2069) around placeables.
-        // Native OS dialog APIs (e.g. TaskDialog) render these as visible characters.
-        bundle.set_use_isolating(false);
-        bundle.add_resource(resource).expect("Failed to add Fluent resource");
-        bundle
+        build_bundle(lang_tag, ftl_source)
     })
+}
+
+fn get_fallback() -> &'static FluentBundle<FluentResource> {
+    FALLBACK.get_or_init(|| build_bundle(DEFAULT_LOCALE.0, DEFAULT_LOCALE.1))
 }
 
 pub fn init_localization() {
@@ -59,9 +71,13 @@ pub fn init_localization() {
 }
 
 pub(crate) fn format_message(id: &str, args: Option<&FluentArgs>) -> String {
-    let bundle = get_bundle();
-    let msg = match bundle.get_message(id) {
-        Some(m) => m,
+    format_message_in(get_bundle(), get_fallback(), id, args)
+}
+
+/// Formats a message of `bundle`, or of `fallback` when `bundle` does not have it.
+fn format_message_in(bundle: &FluentBundle<FluentResource>, fallback: &FluentBundle<FluentResource>, id: &str, args: Option<&FluentArgs>) -> String {
+    let (bundle, msg) = match bundle.get_message(id).map(|m| (bundle, m)).or_else(|| fallback.get_message(id).map(|m| (fallback, m))) {
+        Some(found) => found,
         None => {
             warn!("Missing fluent message: {}", id);
             return id.to_string();
@@ -85,6 +101,17 @@ pub(crate) fn format_message(id: &str, args: Option<&FluentArgs>) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_message_the_locale_lacks_comes_from_the_fallback() {
+        let russian = build_bundle("ru", "shared = общий\n");
+        let english = build_bundle("en-US", "shared = shared\nonly-english = Hello { $name }\n");
+        let mut args = FluentArgs::new();
+        args.set("name", "World");
+        assert_eq!(format_message_in(&russian, &english, "shared", None), "общий");
+        assert_eq!(format_message_in(&russian, &english, "only-english", Some(&args)), "Hello World");
+        assert_eq!(format_message_in(&russian, &english, "nowhere", None), "nowhere");
+    }
 
     const TEST_LOCALES: &[(&str, &str)] = &[("en-US", "english"), ("ru", "russian")];
     const TEST_DEFAULT: (&str, &str) = ("en-US", "english");

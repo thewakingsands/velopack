@@ -207,38 +207,80 @@ unsafe fn unsafe_update_app_manifest_lnks(next_app: &VelopackLocator, previous_a
 
         info!("Creating new shortcut for flag '{:?}' ({:?}).", path, flag);
 
-        match Lnk::create_new() {
-            Ok(mut lnk) => {
-                if let Err(e) = lnk.set_target_path(&app_main_exe) {
-                    warn!("Failed to set target path: {}", e);
-                    break;
-                }
-
-                if let Err(e) = lnk.set_working_directory(&app_work_dir) {
-                    warn!("Failed to set working directory: {}", e);
-                    break;
-                }
-
-                if let Err(e) = lnk.set_aumid(app_model_id.as_deref()) {
-                    warn!("Failed to set app model ID: {}", e);
-                    break;
-                }
-
-                if let Err(e) = lnk.set_icon_location(&app_main_exe, 0) {
-                    warn!("Failed to set icon location: {}", e);
-                    break;
-                }
-
-                if let Err(e) = lnk.save_as(&path) {
-                    warn!("Failed to save shortcut: {}", e);
-                    break;
-                }
-            }
-            Err(e) => {
-                warn!("Failed to create shortcut: {}", e);
-            }
+        if !unsafe_create_lnk(&path, &app_main_exe, &app_work_dir, app_model_id.as_deref()) {
+            break;
         }
     }
+}
+
+/// Writes a new shortcut to the app's main executable. Returns false, after logging why, when it could not.
+unsafe fn unsafe_create_lnk(path: &Path, app_main_exe: &Path, app_work_dir: &Path, app_model_id: Option<&str>) -> bool {
+    let mut lnk = match Lnk::create_new() {
+        Ok(lnk) => lnk,
+        Err(e) => {
+            warn!("Failed to create shortcut: {}", e);
+            // Creating the next one may still work.
+            return true;
+        }
+    };
+    if let Err(e) = lnk.set_target_path(app_main_exe) {
+        warn!("Failed to set target path: {}", e);
+        return false;
+    }
+    if let Err(e) = lnk.set_working_directory(app_work_dir) {
+        warn!("Failed to set working directory: {}", e);
+        return false;
+    }
+    if let Err(e) = lnk.set_aumid(app_model_id) {
+        warn!("Failed to set app model ID: {}", e);
+        return false;
+    }
+    if let Err(e) = lnk.set_icon_location(app_main_exe, 0) {
+        warn!("Failed to set icon location: {}", e);
+        return false;
+    }
+    if let Err(e) = lnk.save_as(path) {
+        warn!("Failed to save shortcut: {}", e);
+        return false;
+    }
+    true
+}
+
+/// Gives the app a Start menu shortcut when it has none, as the installer would have made it. A
+/// shortcut of that name that leads to a program that still exists (another copy of the app) is kept.
+pub fn ensure_start_menu_shortcut(app: &VelopackLocator) {
+    let app = app.clone();
+    unsafe {
+        if let Err(e) = unsafe_run_delegate_in_com_context(move || {
+            unsafe_ensure_start_menu_lnk(&app);
+            Ok(())
+        }) {
+            warn!("Failed to check the Start menu shortcut: {}", e);
+        }
+    }
+}
+
+unsafe fn unsafe_ensure_start_menu_lnk(app: &VelopackLocator) {
+    let existing = unsafe_get_shortcuts_for_root_dir(app.get_root_dir());
+    if existing.iter().any(|(flag, _)| *flag == ShortcutLocationFlags::START_MENU) {
+        return;
+    }
+    let location = ShortcutLocationFlags::START_MENU_ROOT;
+    let path = match get_path_for_shortcut_location(&app.get_manifest_id(), &app.get_manifest_title(), &app.get_manifest_authors(), location) {
+        Ok(path) => path,
+        Err(e) => {
+            error!("Failed to get the path of the Start menu shortcut: {}", e);
+            return;
+        }
+    };
+    if let Ok(lnk) = Lnk::open_write(&path) {
+        if lnk.get_target_path().is_ok_and(|target| target.exists()) {
+            info!("Keeping the Start menu shortcut {:?}: it leads to another program that exists.", path);
+            return;
+        }
+    }
+    info!("Creating the missing Start menu shortcut {:?}.", path);
+    unsafe_create_lnk(&path, &app.get_main_exe_path(), &app.get_current_bin_dir(), app.get_manifest_shortcut_aumid().as_deref());
 }
 
 unsafe fn unsafe_find_best_rename_candidates<P: AsRef<Path>>(
