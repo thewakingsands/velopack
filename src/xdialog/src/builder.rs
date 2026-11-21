@@ -1,0 +1,84 @@
+use crate::model::*;
+
+#[derive(Debug, Default)]
+/// Configures and starts xdialog. Must be `run` on the main thread before any other xdialog
+/// function is called.
+pub struct XDialogBuilder {
+    theme: XDialogTheme,
+    backend: XDialogBackend,
+}
+
+impl XDialogBuilder {
+    /// Create a new XDialogBuilder
+    pub fn new() -> XDialogBuilder {
+        XDialogBuilder::default()
+    }
+
+    /// Set the dialog theme (default [`XDialogTheme::SystemDefault`]).
+    pub fn with_theme(mut self, theme: XDialogTheme) -> XDialogBuilder {
+        self.theme = theme;
+        self
+    }
+
+    /// Choose the dialog backend (default [`XDialogBackend::Auto`]).
+    pub fn with_backend(mut self, backend: XDialogBackend) -> XDialogBuilder {
+        self.backend = backend;
+        self
+    }
+
+    /// [`run_loop`](Self::run_loop) for a `main` with no return value.
+    pub fn run(self, main: fn()) {
+        self.run_loop(main);
+    }
+
+    /// [`run_loop`](Self::run_loop) for a `main` returning a process exit code.
+    pub fn run_i32(self, main: fn() -> i32) -> i32 {
+        self.run_loop(main)
+    }
+
+    /// [`run_loop`](Self::run_loop) for a `main` returning a `Result`.
+    pub fn run_result<T: Send + 'static, E: Send + 'static>(self, main: fn() -> Result<T, E>) -> Result<T, E> {
+        self.run_loop(main)
+    }
+
+    /// Run `main` on a separate thread while this (main) thread runs xdialog's event loop, and
+    /// return `main`'s result. [`run`](Self::run), [`run_i32`](Self::run_i32) and
+    /// [`run_result`](Self::run_result) are the usual shorthands.
+    pub fn run_loop<T: Send + 'static>(self, main: fn() -> T) -> T {
+        crate::backends::run_builder(self.backend, self.theme, main)
+    }
+
+    /// Show xdialog's dialogs inside a winit 0.30 event loop your application runs instead of
+    /// xdialog's ([`run`](Self::run) and friends). The returned [`XDialogHost`](crate::host::XDialogHost)
+    /// [wraps](crate::host::XDialogHost::wrap) your `ApplicationHandler` for each run of the loop
+    /// (`run_app_on_demand`, `pump_app_events`); your handler needs no xdialog code (see the
+    /// [`host`](crate::host) module). Call once, on the event-loop thread, before any dialog
+    /// function. For a loop that runs once with `run_app`, [`into_host_app`](Self::into_host_app)
+    /// is the shorter form.
+    ///
+    /// `waker` is called from any thread when xdialog needs an event-loop iteration. It must make
+    /// the loop iterate (typically `let _ = proxy.send_event(MyEvent::XDialog)`; your `user_event`
+    /// ignores it), must not block, and may be called redundantly (xdialog coalesces: at most one
+    /// outstanding call per `about_to_wait`). It is also called between runs of the loop, for the
+    /// next run to serve.
+    ///
+    /// Errors: `SystemError` if a dialog backend was already initialized (another
+    /// `XDialogBuilder`, `init_*`, `into_host` or `into_host_app`); `NoBackendAvailable` if the
+    /// chosen backend can't run in host mode (`Win32` only on Windows, never `AppKit`; `Auto`
+    /// always can). On error nothing is installed.
+    #[cfg(feature = "winit-host")]
+    pub fn into_host(self, waker: impl Fn() + Send + 'static) -> Result<crate::host::XDialogHost, crate::XDialogError> {
+        crate::host::XDialogHost::new(self.backend, self.theme, Box::new(waker))
+    }
+
+    /// [`into_host`](Self::into_host) with `app` wrapped for good: pass the returned
+    /// [`XDialogApp`](crate::host::XDialogApp) to `run_app`. Its `exiting` ends xdialog for the
+    /// process (later calls `NoBackendAvailable`), which suits a loop that runs once; a loop that
+    /// runs several times (`run_app_on_demand`) uses `into_host` and wraps each run's app.
+    ///
+    /// `waker` and the errors are as for `into_host`; on error `app` is dropped.
+    #[cfg(feature = "winit-host")]
+    pub fn into_host_app<A>(self, app: A, waker: impl Fn() + Send + 'static) -> Result<crate::host::XDialogApp<A>, crate::XDialogError> {
+        Ok(crate::host::XDialogApp::new(app, self.into_host(waker)?))
+    }
+}

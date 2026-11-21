@@ -11,6 +11,7 @@ members = [
     "src/win7-shims",
 ]
 exclude = [
+    "src/xdialog",
     "samples/RustIced",
     "test/Velopack.Deployment.Tests/harnesses/rust",
 ]
@@ -111,3 +112,8 @@ panic = "unwind"         # unwind on panic
 incremental = false      # disable incremental compilation
 codegen-units = 1        # compile all code into a single unit
 rpath = false            # disable rpath
+
+# The dialogs of Setup and Update come from this copy of xdialog, which carries our changes: see
+# src/xdialog/MOJITO.md.
+[patch.crates-io]
+xdialog = { path = "src/xdialog" }
