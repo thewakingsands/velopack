@@ -527,3 +527,6 @@ test/Velopack.Deployment.Tests/harnesses/rust/Cargo.lock
 /vendor/setup*.exe
 /vendor/update*.exe
 /vendor/stub*.exe
+
+# A lockfile from running the tests of the xdialog copy on its own.
+/src/xdialog/Cargo.lock

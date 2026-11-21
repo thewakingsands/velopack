@@ -14,7 +14,7 @@
 //! └──────────────────────────────────────┘
 //! ```
 //!
-//! Width = widest wrapped line + 48 clamped to 320..548 (text wraps at 548 - 48 [- 44 with an
+//! Width = widest wrapped line + 48 clamped to 320..548, and always 548 with a progress bar (text wraps at 548 - 48 [- 44 with an
 //! icon]); min height 184; above `min(756, view.max_height)` the icon/body row scrolls. A custom
 //! icon (`XDialogIcon::Custom`) is a 48 px image at the top left, 16 px left of a column holding
 //! the title, body and progress bar. Buttons are shown in REVERSED API order (the last API index,
@@ -136,7 +136,9 @@ impl Theme for FluentTheme {
             let widest = labels.iter().map(|l| l.size.width).fold(0.0, f64::max) + BUTTON_CHROME_W;
             need = need.max(slots as f64 * widest + BUTTON_GAP * (slots - 1) as f64);
         }
-        let win_w = (need + 2.0 * PAD).ceil().clamp(MIN_W, MAX_W);
+        // A progress dialog's text changes while it is open: at the full width from the start, it keeps
+        // its width whatever the text becomes. Every other dialog hugs its content.
+        let win_w = if view.progress.is_some() { MAX_W } else { (need + 2.0 * PAD).ceil().clamp(MIN_W, MAX_W) };
         let col_w = win_w - 2.0 * PAD;
         // The content column (right of a custom icon).
         let (cx, ccol_w) = (PAD + lead, col_w - lead);
@@ -255,6 +257,22 @@ mod tests {
         assert_eq!(out.buttons[0].rect.x0, PAD);
         assert_eq!(out.buttons[1].rect.x1, out.desired_size.width - PAD);
         assert!(out.parts.heading.is_some() && out.parts.body.is_some() && out.parts.icon.is_none());
+    }
+
+    /// A progress dialog is as wide as a dialog gets whatever its text, so changing the text does not
+    /// resize it; without a progress bar the same text gives a narrower dialog.
+    #[test]
+    fn a_progress_dialog_keeps_its_width_when_its_text_changes() {
+        let mut theme = FluentTheme::new();
+        let buttons = vec!["Cancel".to_string()];
+        let mut width = |body: &str, progress: Option<ProgressView>| {
+            let view = DialogView { heading: "Installing", body, progress, ..view(&buttons) };
+            pass(&mut theme, &view).0.desired_size.width
+        };
+        let short = width("1 MB", Some(ProgressView::Indeterminate { since: 0.0, restarted_at: 0.0 }));
+        assert_eq!(short, MAX_W);
+        assert_eq!(width("Downloaded 98 MB of 151 MB, a little longer than before", Some(ProgressView::Determinate { value: 0.5 })), short);
+        assert!(width("1 MB", None) < MAX_W);
     }
 
     /// The wheel scrolls the body only while the pointer is over it; keys scroll it anywhere.
