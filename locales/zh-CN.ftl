@@ -248,3 +248,6 @@ runtime-failed-header = 未能启动 { $app_title }
 runtime-failed-download = 运行环境下载未完成。请检查网络连接后重试。
 runtime-failed-invalid = 下载的文件未通过校验。请重试。
 runtime-failed-other = 未能准备运行环境。请确认安装位置可以写入后重试。
+setup-runtime-download = 运行环境下载未完成。请检查网络连接后重新运行安装程序。
+setup-runtime-invalid = 下载的文件未通过校验。请重新运行安装程序。
+setup-runtime-other = 未能准备运行环境。请确认安装位置可以写入后重新运行安装程序。

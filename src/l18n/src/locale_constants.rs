@@ -262,6 +262,9 @@ pub const FORK_KEYS: &[&str] = &[
     RUNTIME_FAILED_DOWNLOAD,
     RUNTIME_FAILED_INVALID,
     RUNTIME_FAILED_OTHER,
+    SETUP_RUNTIME_DOWNLOAD,
+    SETUP_RUNTIME_INVALID,
+    SETUP_RUNTIME_OTHER,
 ];
 pub const BTN_RETRY: &str = "btn-retry";
 pub const PROGRESS_CANCELLING: &str = "progress-cancelling";
@@ -277,6 +280,9 @@ pub const RUNTIME_FAILED_HEADER: &str = "runtime-failed-header";
 pub const RUNTIME_FAILED_DOWNLOAD: &str = "runtime-failed-download";
 pub const RUNTIME_FAILED_INVALID: &str = "runtime-failed-invalid";
 pub const RUNTIME_FAILED_OTHER: &str = "runtime-failed-other";
+pub const SETUP_RUNTIME_DOWNLOAD: &str = "setup-runtime-download";
+pub const SETUP_RUNTIME_INVALID: &str = "setup-runtime-invalid";
+pub const SETUP_RUNTIME_OTHER: &str = "setup-runtime-other";
 
 #[cfg(test)]
 mod tests {

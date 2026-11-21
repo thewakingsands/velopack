@@ -259,7 +259,7 @@ fn install_impl(
         // The dialog names the cause in the system's language; the log keeps the error itself.
         Err(e) => {
             error!("Unable to prepare the runtime: {:?}", e);
-            SetupError::RuntimeFailed { app_title: locator.get_manifest_title(), message: windows::runtime::failure_message(&e) }.into()
+            SetupError::RuntimeFailed { app_title: locator.get_manifest_title(), message: windows::runtime::failure_message(&e, true) }.into()
         }
     })?;
     // What is left takes moments and is not worth undoing.

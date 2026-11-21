@@ -340,3 +340,15 @@ pub fn runtime_failed_invalid() -> String {
 pub fn runtime_failed_other() -> String {
     format_message(RUNTIME_FAILED_OTHER, None)
 }
+
+pub fn setup_runtime_download() -> String {
+    format_message(SETUP_RUNTIME_DOWNLOAD, None)
+}
+
+pub fn setup_runtime_invalid() -> String {
+    format_message(SETUP_RUNTIME_INVALID, None)
+}
+
+pub fn setup_runtime_other() -> String {
+    format_message(SETUP_RUNTIME_OTHER, None)
+}

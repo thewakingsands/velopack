@@ -249,3 +249,6 @@ runtime-failed-header = { $app_title } could not start
 runtime-failed-download = The runtime download did not complete. Check the network connection, then try again.
 runtime-failed-invalid = The downloaded file did not pass verification. Please try again.
 runtime-failed-other = The runtime could not be prepared. Make sure the installation folder can be written to, then try again.
+setup-runtime-download = The runtime download did not complete. Check the network connection, then run the installer again.
+setup-runtime-invalid = The downloaded file did not pass verification. Please run the installer again.
+setup-runtime-other = The runtime could not be prepared. Make sure the installation folder can be written to, then run the installer again.

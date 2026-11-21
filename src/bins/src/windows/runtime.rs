@@ -106,11 +106,16 @@ pub fn prepare(request: &Request, reporter: &dyn ProgressReporter) -> Result<()>
 }
 
 /// What to tell the user when [`prepare`] failed: the cause in the system's language, and what to do.
-pub fn failure_message(error: &anyhow::Error) -> String {
-    match error.downcast_ref::<Failure>() {
-        Some(Failure::Download(_)) => dialogs::locale_strings::runtime_failed_download(),
-        Some(Failure::Checksum) | Some(Failure::Archive(_)) => dialogs::locale_strings::runtime_failed_invalid(),
-        None => dialogs::locale_strings::runtime_failed_other(),
+/// The installer has no Retry button, so `in_setup` asks to run it again.
+pub fn failure_message(error: &anyhow::Error, in_setup: bool) -> String {
+    use dialogs::locale_strings as text;
+    match (error.downcast_ref::<Failure>(), in_setup) {
+        (Some(Failure::Download(_)), false) => text::runtime_failed_download(),
+        (Some(Failure::Download(_)), true) => text::setup_runtime_download(),
+        (Some(Failure::Checksum) | Some(Failure::Archive(_)), false) => text::runtime_failed_invalid(),
+        (Some(Failure::Checksum) | Some(Failure::Archive(_)), true) => text::setup_runtime_invalid(),
+        (None, false) => text::runtime_failed_other(),
+        (None, true) => text::setup_runtime_other(),
     }
 }
 
@@ -150,7 +155,7 @@ pub fn repair_before_start(locator: &VelopackLocator) -> bool {
             }
             Err(e) => {
                 error!("Unable to prepare the runtime: {:?}", e);
-                if !dialogs::show_runtime_failed(&title, &failure_message(&e)) {
+                if !dialogs::show_runtime_failed(&title, &failure_message(&e, false)) {
                     return false;
                 }
             }
