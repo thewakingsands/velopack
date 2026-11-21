@@ -163,7 +163,7 @@ pub fn apply_package_impl(old_locator: &VelopackLocator, package: &PathBuf, hook
         // download it, while the installed version is still untouched. Its icon and version come from
         // the stub of the new package.
         let stub_dir = old_locator.get_temp_dir_rand16();
-        let runtime = bundle.extract_stubs_to_dir(&stub_dir).map_err(anyhow::Error::from).and_then(|_| {
+        let runtime = fs::create_dir_all(&stub_dir).map_err(anyhow::Error::from).and_then(|_| Ok(bundle.extract_stubs_to_dir(&stub_dir)?)).and_then(|_| {
             crate::windows::runtime::prepare(
                 &crate::windows::runtime::Request {
                     app_dir: &temp_path_new,
