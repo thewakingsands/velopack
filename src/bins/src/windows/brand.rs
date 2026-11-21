@@ -118,15 +118,35 @@ fn read_resources(file: &Path) -> Result<Vec<Resource>> {
 }
 
 /// Replaces the icon and version information of `target` with those of `donor`.
+///
+/// A file that has just been written is often opened by something else for a moment (a virus scanner,
+/// the shell reading its icon), and the resource update needs the file to itself: a failed attempt is
+/// repeated for a while before it counts.
 pub fn copy_icon_and_version(donor: &Path, target: &Path) -> Result<()> {
     let wanted = read_resources(donor)?;
     if !wanted.iter().any(|resource| resource.kind == Ident::Id(RT_GROUP_ICON.0 as usize as u16)) {
         bail!("{:?} has no icon to give to {:?}", donor, target);
     }
+    const ATTEMPTS: u32 = 40;
+    let mut attempt = 1;
+    loop {
+        match write_resources(&wanted, target) {
+            Ok(()) => return Ok(()),
+            Err(e) if attempt < ATTEMPTS => {
+                warn!("Writing the resources of {:?} failed, attempt {} of {}: {:#}",
+                      target, attempt, ATTEMPTS, e);
+                attempt += 1;
+                std::thread::sleep(std::time::Duration::from_millis(500));
+            }
+            Err(e) => return Err(e),
+        }
+    }
+}
+
+fn write_resources(wanted: &[Resource], target: &Path) -> Result<()> {
     let present = read_resources(target)?;
-    info!("Writing {} icon and version resources of {:?} into {:?} (replacing {}).",
+    info!("Writing {} icon and version resources into {:?} (replacing {}).",
           wanted.len(),
-          donor,
           target,
           present.len());
 
@@ -137,7 +157,7 @@ pub fn copy_icon_and_version(donor: &Path, target: &Path) -> Result<()> {
             for old in present.iter().filter(|old| !wanted.iter().any(|new| new.same_place(old))) {
                 UpdateResourceW(update, old.kind.as_pcwstr(), old.name.as_pcwstr(), old.language, None, 0)?;
             }
-            for new in &wanted {
+            for new in wanted {
                 let data = Some(new.data.as_ptr() as *const c_void);
                 UpdateResourceW(update,
                                 new.kind.as_pcwstr(),

@@ -226,13 +226,40 @@ pub fn prepare(app_dir: &Path,
     };
     check_cancelled(hooks)?;
     (hooks.step)(Step::Branding);
-    (hooks.brand)(&app_dir.join(main_exe))?;
+    // The executable gets its name only when it is finished: shortcuts lead to that name, and whatever
+    // follows them (the shell reading the icon, a scanner) would otherwise open the file while it is
+    // still being written.
+    let unfinished = app_dir.join(unfinished_name(main_exe));
+    (hooks.brand)(&unfinished)?;
+    rename_patiently(&unfinished, &app_dir.join(main_exe))?;
     files.push(main_exe.to_string());
     let marker = Installed { id: spec.id.clone(),
                              app_version: app_version.to_string(),
                              files };
     fs::write(app_dir.join(MARKER_FILE), serde_json::to_vec(&marker)?)?;
     Ok(())
+}
+
+/// The name the main executable has in the app directory until [`prepare`] has finished it.
+fn unfinished_name(main_exe: &str) -> String {
+    format!("{main_exe}.unfinished")
+}
+
+/// Renames a file, trying again for a few seconds when something else has it open for a moment.
+fn rename_patiently(from: &Path, to: &Path) -> Result<()> {
+    let _ = fs::remove_file(to);
+    let mut attempt = 0;
+    loop {
+        match fs::rename(from, to) {
+            Ok(()) => return Ok(()),
+            Err(e) if attempt < 40 => {
+                attempt += 1;
+                debug!("Renaming {:?} failed ({}), trying again.", from, e);
+                std::thread::sleep(std::time::Duration::from_millis(250));
+            }
+            Err(e) => return Err(e).with_context(|| format!("Unable to rename {:?} to {:?}", from, to)),
+        }
+    }
 }
 
 fn carry(source: &Source, app_dir: &Path, main_exe: &str, hooks: &Hooks) -> Result<Vec<String>> {
@@ -249,7 +276,8 @@ fn carry(source: &Source, app_dir: &Path, main_exe: &str, hooks: &Hooks) -> Resu
         }
     }
     // The main executable gets this version's resources written into it, so it is never shared.
-    fs::copy(source.dir.join(main_exe), app_dir.join(main_exe))?;
+    let _ = fs::remove_file(app_dir.join(main_exe));
+    fs::copy(source.dir.join(main_exe), app_dir.join(unfinished_name(main_exe)))?;
     Ok(source.files.clone())
 }
 
@@ -279,10 +307,15 @@ fn obtain(app_dir: &Path, spec: &RuntimeSpec, main_exe: &str, scratch: &Path, ho
                                                                                 Err(e) => anyhow::Error::from(Failure::Archive(format!("{:#}", e))),
                                                                             })?;
     for name in &files {
-        let to = app_dir.join(name);
+        let to = if name == main_exe {
+            app_dir.join(unfinished_name(main_exe))
+        } else {
+            app_dir.join(name)
+        };
         if let Some(parent) = to.parent() {
             fs::create_dir_all(parent)?;
         }
+        let _ = fs::remove_file(app_dir.join(name));
         let _ = fs::remove_file(&to);
         fs::rename(unpacked.join(name), &to).with_context(|| format!("Unable to place {:?}", to))?;
     }
@@ -397,6 +430,7 @@ mod tests {
         spec: RuntimeSpec,
         downloads: Cell<u32>,
         fail_download: Cell<bool>,
+        fail_brand: Cell<bool>,
         steps: RefCell<Vec<&'static str>>,
         cancel_after_download: Cell<bool>,
         fail_link: Cell<bool>,
@@ -412,6 +446,7 @@ mod tests {
                    spec: spec(&sha256),
                    downloads: Cell::new(0),
                    fail_download: Cell::new(false),
+                   fail_brand: Cell::new(false),
                    steps: RefCell::new(Vec::new()),
                    cancel_after_download: Cell::new(false),
                    fail_link: Cell::new(false) }
@@ -443,6 +478,12 @@ mod tests {
                 }
             };
             let mut brand = |exe: &Path| -> Result<()> {
+                // The executable is finished under another name and only then becomes the main executable.
+                assert!(!app_dir.join(MAIN).exists());
+                assert_ne!(exe, app_dir.join(MAIN));
+                if self.fail_brand.get() {
+                    bail!("the file is in use");
+                }
                 fs::write(exe, format!("{} branded {version}", fs::read_to_string(exe)?.split(' ').next().unwrap()))?;
                 Ok(())
             };
@@ -625,6 +666,31 @@ mod tests {
             assert_eq!(fs::metadata(old.join("ffmpeg.dll")).unwrap().ino(),
                        fs::metadata(new.join("ffmpeg.dll")).unwrap().ino());
             assert_ne!(fs::metadata(old.join(MAIN)).unwrap().ino(), fs::metadata(new.join(MAIN)).unwrap().ino());
+        }
+    }
+
+    #[test]
+    fn an_executable_that_could_not_be_finished_never_gets_its_name() {
+        let fixture = Fixture::new(ENTRIES);
+        let old = fixture.dir("current");
+        fixture.prepare(&old, "1.0.0", None).unwrap();
+        for source in [true, false] {
+            let new = fixture.dir(if source {
+                                      "carried"
+                                  } else {
+                                      "downloaded"
+                                  });
+            fixture.fail_brand.set(true);
+            let source = source.then(|| find_source(Some(&old), None, &fixture.spec, MAIN).unwrap());
+            assert!(fixture.prepare(&new, "1.1.0", source).is_err());
+            assert!(!new.join(MAIN).exists());
+            assert!(!is_complete(&new, &fixture.spec, "1.1.0", MAIN));
+            // Trying again in the same directory finishes it.
+            fixture.fail_brand.set(false);
+            fixture.prepare(&new, "1.1.0", None).unwrap();
+            assert!(is_complete(&new, &fixture.spec, "1.1.0", MAIN));
+            assert!(!new.join(unfinished_name(MAIN)).exists());
+            assert_eq!(fs::read_to_string(new.join(MAIN)).unwrap(), "exe branded 1.1.0");
         }
     }
 
