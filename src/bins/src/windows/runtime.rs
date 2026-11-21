@@ -19,6 +19,8 @@ pub struct Request<'a> {
     pub previous_root: Option<&'a Path>,
     /// The launcher stub of the version in `app_dir`; its icon and version go onto the main executable.
     pub stub: &'a Path,
+    /// The first line of the progress dialog; the status of the runtime goes under it.
+    pub body: &'a str,
 }
 
 /// The stub vpk made for this app, in `dir`. vpk names it after the app's title, not its main executable.
@@ -65,9 +67,11 @@ pub fn prepare(request: &Request, reporter: &dyn ProgressReporter) -> Result<()>
         brand::copy_icon_and_version(request.stub, main_exe)
     };
     let size = |bytes: u64| format!("{:.0} MB", bytes as f64 / (1024.0 * 1024.0));
+    let status = |text: String| reporter.set_text(&dialogs::progress::with_status(request.body, &text));
     let mut step = |step: Step| {
-        // Leave the dialog saying that it is cancelling.
         if cancelled() {
+            reporter.set_indeterminate();
+            status(dialogs::locale_strings::progress_cancelling());
             return;
         }
         match step {
@@ -76,16 +80,16 @@ pub fn prepare(request: &Request, reporter: &dyn ProgressReporter) -> Result<()>
                     Some(total) => reporter.set_progress((done.min(total) * 100 / total) as i16),
                     None => reporter.set_indeterminate(),
                 }
-                reporter.set_text(&dialogs::locale_strings::runtime_downloading(&size(done), total.map(size).as_deref()));
+                status(dialogs::locale_strings::runtime_downloading(&size(done), total.map(size).as_deref()));
             }
             Step::Verifying => {
                 reporter.set_indeterminate();
-                reporter.set_text(&dialogs::locale_strings::runtime_verifying());
+                status(dialogs::locale_strings::runtime_verifying());
             }
-            Step::Unpacking => reporter.set_text(&dialogs::locale_strings::runtime_unpacking()),
+            Step::Unpacking => status(dialogs::locale_strings::runtime_unpacking()),
             Step::Carrying | Step::Branding => {
                 reporter.set_indeterminate();
-                reporter.set_text(&dialogs::locale_strings::runtime_finishing());
+                status(dialogs::locale_strings::runtime_finishing());
             }
         }
     };
@@ -116,11 +120,14 @@ pub fn repair_before_start(locator: &VelopackLocator) -> bool {
             let _mutex = locator.try_get_exclusive_lock()?;
             let reporter = dialogs::progress::show_runtime_progress(&title);
             let root = locator.get_root_dir();
+            let body = dialogs::locale_strings::runtime_prepare_body(&title);
+            let stub = stub_path(&root, locator);
             let request = Request { app_dir: &app_dir,
                                     locator,
                                     previous_app_dir: None,
                                     previous_root: Some(&root),
-                                    stub: &stub_path(&root, locator) };
+                                    stub: &stub,
+                                    body: &body };
             let result = prepare(&request, reporter.as_ref());
             reporter.close();
             result

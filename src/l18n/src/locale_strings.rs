@@ -280,8 +280,18 @@ pub fn btn_retry() -> String {
     format_message(BTN_RETRY, None)
 }
 
+pub fn progress_preparing() -> String {
+    format_message(PROGRESS_PREPARING, None)
+}
+
 pub fn progress_cancelling() -> String {
     format_message(PROGRESS_CANCELLING, None)
+}
+
+pub fn runtime_prepare_body(app: &str) -> String {
+    let mut args = FluentArgs::new();
+    args.set("app_title", app.to_string());
+    format_message(RUNTIME_PREPARE_BODY, Some(&args))
 }
 
 pub fn runtime_prepare_header(app: &str) -> String {

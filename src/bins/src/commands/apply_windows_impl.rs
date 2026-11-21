@@ -171,6 +171,7 @@ pub fn apply_package_impl(old_locator: &VelopackLocator, package: &PathBuf, hook
                     previous_app_dir: Some(&current_dir),
                     previous_root: Some(&root_path),
                     stub: &crate::windows::runtime::stub_path(&stub_dir, &new_locator),
+                    body: &dialogs::locale_strings::apply_body(&new_locator.get_manifest_version_full_string()),
                 },
                 reporter.as_ref(),
             )

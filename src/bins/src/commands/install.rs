@@ -251,6 +251,8 @@ fn install_impl(
             previous_app_dir: previous_current.as_deref(),
             previous_root,
             stub: &windows::runtime::stub_path(&locator.get_root_dir(), locator),
+            // The text the installation window was opened with.
+            body: &dialogs::locale_strings::splash_body(&locator.get_manifest_title(), &locator.get_manifest_version().to_string()),
         },
         &dialogs::progress::ChannelProgressReporter::new(tx.clone()),
     )?;
