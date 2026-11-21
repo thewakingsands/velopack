@@ -275,6 +275,17 @@ pub fn show_setup_error(app_title: &str, error_string: &str) {
     show_error(&title, &header, error_string);
 }
 
+/// The runtime of an app started through its stub could not be prepared. True when the user wants to retry.
+pub fn show_runtime_failed(app_title: &str, error_string: &str) -> bool {
+    if get_silent() {
+        return false;
+    }
+    let header = locale_strings::runtime_failed_header(app_title);
+    let body = format!("{}\n\n{}", error_string, locale_strings::runtime_failed_hint());
+    let buttons = vec![locale_strings::btn_retry(), locale_strings::btn_cancel()];
+    matches!(show_message(app_title, &header, &body, XDialogIcon::Error, buttons), Ok(XDialogResult::ButtonPressed(0)))
+}
+
 pub fn show_start_corrupt_error(app_title: &str) {
     let header = locale_strings::start_corrupt_header();
     let body = locale_strings::start_corrupt_body();

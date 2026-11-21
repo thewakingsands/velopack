@@ -244,6 +244,32 @@ define_locale_keys! {
     MSI_DOWNGRADE_ERROR = "msi-downgrade-error",
 }
 
+/// Messages this fork adds. Only en-US and zh-CN carry them; every other locale shows the en-US text
+/// (see `localization::format_message`), so they stay out of `ALL_KEYS`.
+#[allow(dead_code)]
+pub const FORK_KEYS: &[&str] = &[
+    BTN_RETRY,
+    PROGRESS_CANCELLING,
+    RUNTIME_PREPARE_HEADER,
+    RUNTIME_DOWNLOADING,
+    RUNTIME_DOWNLOADING_UNKNOWN,
+    RUNTIME_VERIFYING,
+    RUNTIME_UNPACKING,
+    RUNTIME_FINISHING,
+    RUNTIME_FAILED_HEADER,
+    RUNTIME_FAILED_HINT,
+];
+pub const BTN_RETRY: &str = "btn-retry";
+pub const PROGRESS_CANCELLING: &str = "progress-cancelling";
+pub const RUNTIME_PREPARE_HEADER: &str = "runtime-prepare-header";
+pub const RUNTIME_DOWNLOADING: &str = "runtime-downloading";
+pub const RUNTIME_DOWNLOADING_UNKNOWN: &str = "runtime-downloading-unknown";
+pub const RUNTIME_VERIFYING: &str = "runtime-verifying";
+pub const RUNTIME_UNPACKING: &str = "runtime-unpacking";
+pub const RUNTIME_FINISHING: &str = "runtime-finishing";
+pub const RUNTIME_FAILED_HEADER: &str = "runtime-failed-header";
+pub const RUNTIME_FAILED_HINT: &str = "runtime-failed-hint";
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -260,6 +286,18 @@ mod tests {
             bundle.add_resource(resource).unwrap();
 
             for key in ALL_KEYS {
+                assert!(bundle.get_message(key).is_some(), "Locale '{lang_tag}' is missing key '{key}'");
+            }
+        }
+    }
+
+    #[test]
+    fn fork_keys_present_in_english_and_simplified_chinese() {
+        for (lang_tag, ftl_source) in [("en-US", EN_US_FTL), ("zh-CN", ZH_CN_FTL)] {
+            let resource = FluentResource::try_new(ftl_source.to_string()).unwrap();
+            let mut bundle = FluentBundle::new_concurrent(vec![lang_tag.parse::<UnicLanguageIdentifier>().unwrap()]);
+            bundle.add_resource(resource).unwrap();
+            for key in FORK_KEYS {
                 assert!(bundle.get_message(key).is_some(), "Locale '{lang_tag}' is missing key '{key}'");
             }
         }

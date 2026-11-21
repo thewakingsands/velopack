@@ -232,3 +232,15 @@ msi-readme-description = 请在继续之前阅读以下信息。
 
 # MSI Installer UI - Downgrade Error
 msi-downgrade-error = 已安装较新版本的 { $app_title }。
+
+# Runtime download (install.rs, apply_windows_impl.rs, start_windows_impl.rs)
+btn-retry = 重试
+progress-cancelling = 正在取消...
+runtime-prepare-header = 正在准备 { $app_title }
+runtime-downloading = 正在下载运行环境：{ $done } / { $total }
+runtime-downloading-unknown = 正在下载运行环境：{ $done }
+runtime-verifying = 正在校验下载的文件...
+runtime-unpacking = 正在解压运行环境...
+runtime-finishing = 正在完成...
+runtime-failed-header = 无法准备 { $app_title } 的运行环境
+runtime-failed-hint = 请检查网络后重试。

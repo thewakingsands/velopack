@@ -233,3 +233,15 @@ msi-start-menu-shortcut-description = Start Menu shortcut for { $app_title }
 
 # MSI Installer UI - Downgrade Error
 msi-downgrade-error = A newer version of { $app_title } is already installed.
+
+# Runtime download (install.rs, apply_windows_impl.rs, start_windows_impl.rs)
+btn-retry = Retry
+progress-cancelling = Cancelling...
+runtime-prepare-header = Preparing { $app_title }
+runtime-downloading = Downloading the runtime: { $done } of { $total }
+runtime-downloading-unknown = Downloading the runtime: { $done }
+runtime-verifying = Verifying the download...
+runtime-unpacking = Unpacking the runtime...
+runtime-finishing = Finishing...
+runtime-failed-header = { $app_title } could not be prepared
+runtime-failed-hint = Check the network connection, then try again.
