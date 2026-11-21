@@ -1,5 +1,6 @@
 mod app_icon;
 pub mod fastzip;
+pub mod runtime;
 pub mod runtime_arch;
 
 mod util_common;
