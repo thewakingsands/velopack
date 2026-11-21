@@ -21,10 +21,9 @@ pub struct Request<'a> {
     pub stub: &'a Path,
 }
 
-/// The stub vpk made for this app, in `dir`: it is named after the main executable.
+/// The stub vpk made for this app, in `dir`. vpk names it after the app's title, not its main executable.
 pub fn stub_path(dir: &Path, locator: &VelopackLocator) -> PathBuf {
-    let main_exe = locator.get_manifest().main_exe;
-    dir.join(Path::new(&main_exe).file_name().unwrap_or_default())
+    dir.join(format!("{}.exe", locator.get_manifest_title()))
 }
 
 /// Whether the package in `app_dir` names a runtime that is not whole there.

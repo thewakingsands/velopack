@@ -85,7 +85,7 @@ public abstract class PackageBuilder<T, TValidator> : ValidatedCommand<T, TValid
 
         // check that entry exe exists
         var mainExeName = options.EntryExecutableName ?? options.PackId;
-        var mainSearchPaths = GetMainExeSearchPaths(packDirectory, mainExeName);
+        var mainSearchPaths = HasMainExe(options) ? GetMainExeSearchPaths(packDirectory, mainExeName) : [];
         string mainExePath = null;
         foreach (var path in mainSearchPaths) {
             if (File.Exists(path)) {
@@ -94,7 +94,7 @@ public abstract class PackageBuilder<T, TValidator> : ValidatedCommand<T, TValid
             }
         }
 
-        if (mainExePath == null) {
+        if (mainExePath == null && HasMainExe(options)) {
             throw new UserInfoException(
                 $"Could not find main application executable (the one that runs 'VelopackApp.Build().Run()'). " + Environment.NewLine +
                 $"If your main binary is not named '{mainExeName}', please specify the name with the argument: --mainExe {{yourBinary.exe}}" +
@@ -105,7 +105,7 @@ public abstract class PackageBuilder<T, TValidator> : ValidatedCommand<T, TValid
         }
 
         MainExePath = mainExePath;
-        options.EntryExecutableName = Path.GetRelativePath(packDirectory, mainExePath).Replace('\\', '/');
+        options.EntryExecutableName = mainExePath == null ? null : Path.GetRelativePath(packDirectory, mainExePath).Replace('\\', '/');
         Options = options;
 
         var assetCache = new BuildAssets(pkgTempDir, channel);
@@ -194,6 +194,9 @@ public abstract class PackageBuilder<T, TValidator> : ValidatedCommand<T, TValid
     protected virtual string ExtractPackDir(string packDirectory) => packDirectory;
 
     protected abstract string[] GetMainExeSearchPaths(string packDirectory, string mainExeName);
+
+    /// <summary> False when the package carries no main executable: the installer gets it from elsewhere. </summary>
+    protected virtual bool HasMainExe(T options) => true;
 
     protected virtual string GenerateNuspecContent()
     {

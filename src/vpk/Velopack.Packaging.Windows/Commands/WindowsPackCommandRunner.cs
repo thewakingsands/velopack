@@ -46,7 +46,7 @@ public class WindowsPackCommandRunner : PackageBuilder<WindowsPackOptions, Windo
 
     protected override Task<string> PreprocessPackDir(Action<int> progress, string packDir)
     {
-        if (!Options.SkipVelopackAppCheck) {
+        if (!Options.SkipVelopackAppCheck && !Options.NoMainExe) {
             var compat = new CompatUtil(Log, Console);
             compat.Verify(MainExePath);
         } else {
@@ -107,12 +107,23 @@ public class WindowsPackCommandRunner : PackageBuilder<WindowsPackOptions, Windo
         // restored, and updaters already in the field need no flag to honour it. See #1060.
         if (Options.NoStub) {
             Log.Info("Skipping launcher stub, --noStub was specified.");
+        } else if (Options.NoMainExe) {
+            // Without a main executable to copy them from, the stub takes its icon and version from the package.
+            var stubPath = Path.Combine(packDir, GetStubBaseName() + "_ExecutionStub.exe");
+            IoUtil.Retry(() => File.Copy(HelperFile.GetStubExecutablePath(Options.TargetRuntime, Log), stubPath, true));
+            var edit = new ResourceEdit(stubPath, Log);
+            edit.SetVersionInfo(PackageManifest.ParseFromFile(Path.Combine(packDir, CoreUtil.SpecVersionFileName)));
+            if (Options.Icon != null) edit.SetExeIcon(Options.Icon);
+            edit.Commit();
         } else {
             var mainExeName = Options.EntryExecutableName;
             var mainPath = Path.Combine(packDir, mainExeName);
             var stubPath = Path.Combine(packDir, GetStubBaseName() + "_ExecutionStub.exe");
             CreateExecutableStubForExe(mainPath, stubPath);
         }
+
+        if (Options.NoMainExe && !Options.TargetRuntime.HasArchitecture)
+            throw new UserInfoException("--noMainExe needs --runtime with an architecture, for example win-x64.");
 
         Options.TargetRuntime.Architecture = Options.TargetRuntime.HasArchitecture
             ? Options.TargetRuntime.Architecture
@@ -397,6 +408,8 @@ public class WindowsPackCommandRunner : PackageBuilder<WindowsPackOptions, Windo
 
         return RuntimeCpu.x86;
     }
+
+    protected override bool HasMainExe(WindowsPackOptions options) => !options.NoMainExe;
 
     protected override string[] GetMainExeSearchPaths(string packDirectory, string mainExeName)
     {

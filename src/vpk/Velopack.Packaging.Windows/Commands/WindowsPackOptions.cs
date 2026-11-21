@@ -26,6 +26,8 @@ public class WindowsPackOptions : WindowsReleasifyOptions, INugetPackCommand, IP
 
     public bool NoStub { get; set; }
 
+    public bool NoMainExe { get; set; }
+
     public string Shortcuts { get; set; } = "Desktop,StartMenuRoot";
 
     public string InstWelcome { get; set; }
