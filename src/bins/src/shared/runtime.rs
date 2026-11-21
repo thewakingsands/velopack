@@ -178,6 +178,18 @@ pub struct Hooks<'a> {
 #[error("Cancelled by the user.")]
 pub struct Cancelled;
 
+/// Why the runtime could not be obtained, as far as a user can act on it. The text is for the log;
+/// dialogs show their own message for each kind.
+#[derive(Debug, thiserror::Error)]
+pub enum Failure {
+    #[error("The runtime download did not complete: {0}")]
+    Download(String),
+    #[error("The downloaded runtime does not match its SHA-256 checksum.")]
+    Checksum,
+    #[error("The downloaded runtime cannot be used: {0}")]
+    Archive(String),
+}
+
 fn check_cancelled(hooks: &Hooks) -> Result<()> {
     if (hooks.cancelled)() {
         return Err(Cancelled.into());
@@ -250,18 +262,22 @@ fn obtain(app_dir: &Path, spec: &RuntimeSpec, main_exe: &str, scratch: &Path, ho
     (hooks.step)(Step::Downloading { done: 0, total: None });
     let cancelled = hooks.cancelled;
     let step = &mut *hooks.step;
-    (hooks.download)(&spec.url, &archive, &mut |done, total| {
+    let downloaded = (hooks.download)(&spec.url, &archive, &mut |done, total| {
         step(Step::Downloading { done, total });
         !cancelled()
-    })?;
+    });
     check_cancelled(hooks)?;
+    downloaded.map_err(|e| Failure::Download(format!("{:#}", e)))?;
 
     (hooks.step)(Step::Verifying);
     verify_sha256(&archive, &spec.sha256)?;
     check_cancelled(hooks)?;
 
     (hooks.step)(Step::Unpacking);
-    let files = unpack(&archive, &unpacked, spec, main_exe, hooks.cancelled)?;
+    let files = unpack(&archive, &unpacked, spec, main_exe, hooks.cancelled).map_err(|e| match e.downcast::<Cancelled>() {
+                                                                                Ok(cancelled) => cancelled.into(),
+                                                                                Err(e) => anyhow::Error::from(Failure::Archive(format!("{:#}", e))),
+                                                                            })?;
     for name in &files {
         let to = app_dir.join(name);
         if let Some(parent) = to.parent() {
@@ -286,7 +302,7 @@ fn verify_sha256(file: &Path, expected: &str) -> Result<()> {
     }
     let actual: String = digest.finalize().iter().map(|byte| format!("{:02x}", byte)).collect();
     if !actual.eq_ignore_ascii_case(expected) {
-        bail!("The downloaded runtime does not match its SHA-256 checksum.");
+        return Err(Failure::Checksum.into());
     }
     Ok(())
 }
@@ -380,6 +396,7 @@ mod tests {
         zip: PathBuf,
         spec: RuntimeSpec,
         downloads: Cell<u32>,
+        fail_download: Cell<bool>,
         steps: RefCell<Vec<&'static str>>,
         cancel_after_download: Cell<bool>,
         fail_link: Cell<bool>,
@@ -394,6 +411,7 @@ mod tests {
                    zip,
                    spec: spec(&sha256),
                    downloads: Cell::new(0),
+                   fail_download: Cell::new(false),
                    steps: RefCell::new(Vec::new()),
                    cancel_after_download: Cell::new(false),
                    fail_link: Cell::new(false) }
@@ -409,6 +427,9 @@ mod tests {
             let cancelled = Cell::new(false);
             let mut download = |_: &str, to: &Path, report: &mut dyn FnMut(u64, Option<u64>) -> bool| -> Result<()> {
                 self.downloads.set(self.downloads.get() + 1);
+                if self.fail_download.get() {
+                    bail!("connection reset");
+                }
                 fs::copy(&self.zip, to)?;
                 report(1, Some(1));
                 cancelled.set(self.cancel_after_download.get());
@@ -534,7 +555,7 @@ mod tests {
         let mut wrong = Fixture::new(ENTRIES);
         wrong.spec.sha256 = "0".repeat(64);
         let error = wrong.prepare(&app, "1.0.0", None).unwrap_err();
-        assert!(error.to_string().contains("SHA-256"));
+        assert!(matches!(error.downcast_ref::<Failure>(), Some(Failure::Checksum)));
         assert_eq!(files_in(&app), ["sq.version"]);
 
         let mut truncated = Fixture::new(ENTRIES);
@@ -542,8 +563,15 @@ mod tests {
         fs::write(&truncated.zip, &bytes[..bytes.len() / 2]).unwrap();
         assert!(truncated.prepare(&app, "1.0.0", None).is_err());
         truncated.spec.sha256 = Sha256::digest(&bytes[..bytes.len() / 2]).iter().map(|b| format!("{:02x}", b)).collect();
-        assert!(truncated.prepare(&app, "1.0.0", None).is_err());
+        let error = truncated.prepare(&app, "1.0.0", None).unwrap_err();
+        assert!(matches!(error.downcast_ref::<Failure>(), Some(Failure::Archive(_))));
         assert_eq!(files_in(&app), ["sq.version"]);
+
+        fixture.fail_download.set(true);
+        let error = fixture.prepare(&app, "1.0.0", None).unwrap_err();
+        assert!(matches!(error.downcast_ref::<Failure>(), Some(Failure::Download(reason)) if reason.contains("connection reset")));
+        assert_eq!(files_in(&app), ["sq.version"]);
+        fixture.fail_download.set(false);
 
         fixture.cancel_after_download.set(true);
         let error = fixture.prepare(&app, "1.0.0", None).unwrap_err();

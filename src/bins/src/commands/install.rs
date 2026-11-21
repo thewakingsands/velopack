@@ -251,11 +251,17 @@ fn install_impl(
             previous_app_dir: previous_current.as_deref(),
             previous_root,
             stub: &windows::runtime::stub_path(&locator.get_root_dir(), locator),
-            // The text the installation window was opened with.
-            body: &dialogs::locale_strings::splash_body(&locator.get_manifest_title(), &locator.get_manifest_version().to_string()),
         },
         &dialogs::progress::ChannelProgressReporter::new(tx.clone()),
-    )?;
+    )
+    .map_err(|e| match e.downcast::<shared::runtime::Cancelled>() {
+        Ok(cancelled) => anyhow::Error::from(cancelled),
+        // The dialog names the cause in the system's language; the log keeps the error itself.
+        Err(e) => {
+            error!("Unable to prepare the runtime: {:?}", e);
+            SetupError::RuntimeFailed { app_title: locator.get_manifest_title(), message: windows::runtime::failure_message(&e) }.into()
+        }
+    })?;
     // What is left takes moments and is not worth undoing.
     dialogs::progress::disallow_cancel();
     let _ = tx.send(windows::splash::MSG_INDEFINITE);

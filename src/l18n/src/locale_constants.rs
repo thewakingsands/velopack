@@ -249,7 +249,6 @@ define_locale_keys! {
 #[allow(dead_code)]
 pub const FORK_KEYS: &[&str] = &[
     BTN_RETRY,
-    PROGRESS_PREPARING,
     PROGRESS_CANCELLING,
     RUNTIME_PREPARE_HEADER,
     RUNTIME_PREPARE_BODY,
@@ -259,10 +258,11 @@ pub const FORK_KEYS: &[&str] = &[
     RUNTIME_UNPACKING,
     RUNTIME_FINISHING,
     RUNTIME_FAILED_HEADER,
-    RUNTIME_FAILED_HINT,
+    RUNTIME_FAILED_DOWNLOAD,
+    RUNTIME_FAILED_INVALID,
+    RUNTIME_FAILED_OTHER,
 ];
 pub const BTN_RETRY: &str = "btn-retry";
-pub const PROGRESS_PREPARING: &str = "progress-preparing";
 pub const PROGRESS_CANCELLING: &str = "progress-cancelling";
 pub const RUNTIME_PREPARE_HEADER: &str = "runtime-prepare-header";
 pub const RUNTIME_PREPARE_BODY: &str = "runtime-prepare-body";
@@ -272,7 +272,9 @@ pub const RUNTIME_VERIFYING: &str = "runtime-verifying";
 pub const RUNTIME_UNPACKING: &str = "runtime-unpacking";
 pub const RUNTIME_FINISHING: &str = "runtime-finishing";
 pub const RUNTIME_FAILED_HEADER: &str = "runtime-failed-header";
-pub const RUNTIME_FAILED_HINT: &str = "runtime-failed-hint";
+pub const RUNTIME_FAILED_DOWNLOAD: &str = "runtime-failed-download";
+pub const RUNTIME_FAILED_INVALID: &str = "runtime-failed-invalid";
+pub const RUNTIME_FAILED_OTHER: &str = "runtime-failed-other";
 
 #[cfg(test)]
 mod tests {

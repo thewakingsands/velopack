@@ -35,7 +35,9 @@ fn negotiate_locale<'a>(requested: &str, available: &'a [(&'a str, &'a str)], de
 /// Detect the system locale and pick the best available .ftl resource.
 /// Falls back to en-US if no match.
 fn select_locale() -> (&'static str, &'static str) {
-    match sys_locale::get_locale() {
+    // VELOPACK_LOCALE (for example zh-CN) takes the place of the system's language: to look at the
+    // dialogs in a language the machine at hand is not set to.
+    match std::env::var("VELOPACK_LOCALE").ok().filter(|locale| !locale.is_empty()).or_else(sys_locale::get_locale) {
         Some(locale) => negotiate_locale(&locale, LOCALE_SOURCES, DEFAULT_LOCALE),
         None => DEFAULT_LOCALE,
     }

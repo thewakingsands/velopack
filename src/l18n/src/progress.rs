@@ -12,13 +12,6 @@ static CANCEL_ALLOWED: AtomicBool = AtomicBool::new(true);
 /// whoever shows the dialog picks the text up here.
 static CHANNEL_TEXT: Mutex<Option<String>> = Mutex::new(None);
 
-/// The text of a progress dialog with a status under it. The dialog is as wide as its longest line
-/// and as tall as its lines, so it only keeps its size when the first line stays and the status is
-/// the shorter one: every dialog that shows a status has these two lines from the start.
-pub fn with_status(body: &str, status: &str) -> String {
-    format!("{}\n{}", body, status)
-}
-
 /// Whether the user asked to cancel the running operation.
 pub fn cancel_requested() -> bool {
     CANCEL_REQUESTED.load(Ordering::SeqCst)
@@ -143,21 +136,21 @@ fn show_progress_dialog_ex(title: &str, header: &str, body: &str, cancellable: b
 pub fn show_apply_progress(app_name: &str, version: &str) -> Box<dyn ProgressReporter> {
     let title = crate::locale_strings::title_update(app_name);
     let header = crate::locale_strings::apply_header();
-    let body = with_status(&crate::locale_strings::apply_body(version), &crate::locale_strings::progress_preparing());
+    let body = crate::locale_strings::apply_body(version);
     show_progress_dialog_ex(&title, &header, &body, true)
 }
 
 /// Shown when an app started through its stub has to get its runtime first.
 pub fn show_runtime_progress(app_name: &str) -> Box<dyn ProgressReporter> {
     let header = crate::locale_strings::runtime_prepare_header(app_name);
-    let body = with_status(&crate::locale_strings::runtime_prepare_body(app_name), &crate::locale_strings::progress_preparing());
+    let body = crate::locale_strings::runtime_prepare_body();
     show_progress_dialog_ex(app_name, &header, &body, true)
 }
 
 pub fn show_splash_progress(app_name: &str, app_version: &str) -> Box<dyn ProgressReporter> {
     let title = crate::locale_strings::title_setup(app_name);
     let header = crate::locale_strings::splash_header(app_name);
-    let body = with_status(&crate::locale_strings::splash_body(app_name, app_version), &crate::locale_strings::progress_preparing());
+    let body = crate::locale_strings::splash_body(app_name, app_version);
     show_progress_dialog_ex(&title, &header, &body, true)
 }
 

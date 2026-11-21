@@ -280,18 +280,12 @@ pub fn btn_retry() -> String {
     format_message(BTN_RETRY, None)
 }
 
-pub fn progress_preparing() -> String {
-    format_message(PROGRESS_PREPARING, None)
-}
-
 pub fn progress_cancelling() -> String {
     format_message(PROGRESS_CANCELLING, None)
 }
 
-pub fn runtime_prepare_body(app: &str) -> String {
-    let mut args = FluentArgs::new();
-    args.set("app_title", app.to_string());
-    format_message(RUNTIME_PREPARE_BODY, Some(&args))
+pub fn runtime_prepare_body() -> String {
+    format_message(RUNTIME_PREPARE_BODY, None)
 }
 
 pub fn runtime_prepare_header(app: &str) -> String {
@@ -331,6 +325,14 @@ pub fn runtime_failed_header(app: &str) -> String {
     format_message(RUNTIME_FAILED_HEADER, Some(&args))
 }
 
-pub fn runtime_failed_hint() -> String {
-    format_message(RUNTIME_FAILED_HINT, None)
+pub fn runtime_failed_download() -> String {
+    format_message(RUNTIME_FAILED_DOWNLOAD, None)
+}
+
+pub fn runtime_failed_invalid() -> String {
+    format_message(RUNTIME_FAILED_INVALID, None)
+}
+
+pub fn runtime_failed_other() -> String {
+    format_message(RUNTIME_FAILED_OTHER, None)
 }

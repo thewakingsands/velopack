@@ -4,7 +4,7 @@
 
 use super::brand;
 use crate::dialogs::{self, progress::ProgressReporter};
-use crate::shared::runtime::{self, Cancelled, Hooks, RuntimeSpec, Step};
+use crate::shared::runtime::{self, Cancelled, Failure, Hooks, RuntimeSpec, Step};
 use anyhow::{anyhow, Result};
 use std::path::{Path, PathBuf};
 use velopack::{download, locator::VelopackLocator};
@@ -19,8 +19,6 @@ pub struct Request<'a> {
     pub previous_root: Option<&'a Path>,
     /// The launcher stub of the version in `app_dir`; its icon and version go onto the main executable.
     pub stub: &'a Path,
-    /// The first line of the progress dialog; the status of the runtime goes under it.
-    pub body: &'a str,
 }
 
 /// The stub vpk made for this app, in `dir`. vpk names it after the app's title, not its main executable.
@@ -67,7 +65,7 @@ pub fn prepare(request: &Request, reporter: &dyn ProgressReporter) -> Result<()>
         brand::copy_icon_and_version(request.stub, main_exe)
     };
     let size = |bytes: u64| format!("{:.0} MB", bytes as f64 / (1024.0 * 1024.0));
-    let status = |text: String| reporter.set_text(&dialogs::progress::with_status(request.body, &text));
+    let status = |text: String| reporter.set_text(&text);
     let mut step = |step: Step| {
         if cancelled() {
             reporter.set_indeterminate();
@@ -102,6 +100,15 @@ pub fn prepare(request: &Request, reporter: &dyn ProgressReporter) -> Result<()>
     runtime::prepare(request.app_dir, &spec, &version, &manifest.main_exe, source, &scratch, &mut hooks)
 }
 
+/// What to tell the user when [`prepare`] failed: the cause in the system's language, and what to do.
+pub fn failure_message(error: &anyhow::Error) -> String {
+    match error.downcast_ref::<Failure>() {
+        Some(Failure::Download(_)) => dialogs::locale_strings::runtime_failed_download(),
+        Some(Failure::Checksum) | Some(Failure::Archive(_)) => dialogs::locale_strings::runtime_failed_invalid(),
+        None => dialogs::locale_strings::runtime_failed_other(),
+    }
+}
+
 /// Called before an installed app is started through its stub: completes a runtime that is missing
 /// from `current`, in its own progress dialog, and makes sure the Start menu has a shortcut.
 /// Returns false when the app should not be started: the user cancelled or gave up retrying.
@@ -120,14 +127,12 @@ pub fn repair_before_start(locator: &VelopackLocator) -> bool {
             let _mutex = locator.try_get_exclusive_lock()?;
             let reporter = dialogs::progress::show_runtime_progress(&title);
             let root = locator.get_root_dir();
-            let body = dialogs::locale_strings::runtime_prepare_body(&title);
             let stub = stub_path(&root, locator);
             let request = Request { app_dir: &app_dir,
                                     locator,
                                     previous_app_dir: None,
                                     previous_root: Some(&root),
-                                    stub: &stub,
-                                    body: &body };
+                                    stub: &stub };
             let result = prepare(&request, reporter.as_ref());
             reporter.close();
             result
@@ -140,7 +145,7 @@ pub fn repair_before_start(locator: &VelopackLocator) -> bool {
             }
             Err(e) => {
                 error!("Unable to prepare the runtime: {:?}", e);
-                if !dialogs::show_runtime_failed(&title, &e.to_string()) {
+                if !dialogs::show_runtime_failed(&title, &failure_message(&e)) {
                     return false;
                 }
             }
