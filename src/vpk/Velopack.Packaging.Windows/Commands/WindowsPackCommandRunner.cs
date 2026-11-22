@@ -86,10 +86,12 @@ public class WindowsPackCommandRunner : PackageBuilder<WindowsPackOptions, Windo
             }
         }
 
-        // update icon for Update.exe if requested
-        if (Options.Icon != null) {
+        // Update.exe carries the application's version information, and its icon if requested
+        {
+            var manifest = PackageManifest.ParseFromFile(Path.Combine(packDir, CoreUtil.SpecVersionFileName));
             var editor = new ResourceEdit(updatePath, Log);
-            editor.SetExeIcon(Options.Icon);
+            editor.SetVersionInfo(manifest, manifest.ProductName + " Updater", Options.Copyright);
+            if (Options.Icon != null) editor.SetExeIcon(Options.Icon);
             editor.Commit();
         }
 
@@ -113,7 +115,9 @@ public class WindowsPackCommandRunner : PackageBuilder<WindowsPackOptions, Windo
             var stubPath = Path.Combine(packDir, GetStubBaseName() + "_ExecutionStub.exe");
             IoUtil.Retry(() => File.Copy(HelperFile.GetStubExecutablePath(Options.TargetRuntime, Log), stubPath, true));
             var edit = new ResourceEdit(stubPath, Log);
-            edit.SetVersionInfo(PackageManifest.ParseFromFile(Path.Combine(packDir, CoreUtil.SpecVersionFileName)));
+            var manifest = PackageManifest.ParseFromFile(Path.Combine(packDir, CoreUtil.SpecVersionFileName));
+            edit.SetVersionInfo(manifest, manifest.ProductName + " Launcher", Options.Copyright);
+            edit.AddMainExeVersionInfo(manifest, manifest.ProductName, Options.Copyright);
             var stubIcon = Options.StubIcon ?? Options.Icon;
             if (stubIcon != null) edit.SetExeIcon(stubIcon);
             edit.Commit();
@@ -248,7 +252,7 @@ public class WindowsPackCommandRunner : PackageBuilder<WindowsPackOptions, Windo
         setupExeProgress(10);
 
         var editor = new ResourceEdit(targetSetupExe, Log);
-        editor.SetVersionInfo(bundledZip);
+        editor.SetVersionInfo(bundledZip, bundledZip.ProductName + " Installer", Options.Copyright);
         if (Options.Icon != null) {
             editor.SetExeIcon(Options.Icon);
         }

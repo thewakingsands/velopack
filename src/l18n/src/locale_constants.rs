@@ -249,6 +249,9 @@ define_locale_keys! {
 #[allow(dead_code)]
 pub const FORK_KEYS: &[&str] = &[
     BTN_RETRY,
+    BTN_START,
+    OVERWRITE_INCOMPLETE_HEADER,
+    OVERWRITE_INCOMPLETE_BODY,
     PROGRESS_CANCELLING,
     RUNTIME_PREPARE_HEADER,
     RUNTIME_PREPARE_BODY,
@@ -267,6 +270,9 @@ pub const FORK_KEYS: &[&str] = &[
     SETUP_RUNTIME_OTHER,
 ];
 pub const BTN_RETRY: &str = "btn-retry";
+pub const BTN_START: &str = "btn-start";
+pub const OVERWRITE_INCOMPLETE_HEADER: &str = "overwrite-incomplete-header";
+pub const OVERWRITE_INCOMPLETE_BODY: &str = "overwrite-incomplete-body";
 pub const PROGRESS_CANCELLING: &str = "progress-cancelling";
 pub const RUNTIME_PREPARE_HEADER: &str = "runtime-prepare-header";
 pub const RUNTIME_PREPARE_BODY: &str = "runtime-prepare-body";

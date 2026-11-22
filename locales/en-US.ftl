@@ -33,7 +33,7 @@ uninstall-errors-log = Details were saved to: { $path }
 
 # Overwrite/repair dialog (install.rs)
 overwrite-already-installed = { $app_title } is already installed
-overwrite-repair-body = This application is already installed on your computer. If it is not working correctly, you can try repairing it by reinstalling.
+overwrite-repair-body = This version is already installed on your computer. If it is not working correctly, you can repair the installation.
 overwrite-older-installed = { $app_title } is already installed
 overwrite-update-body = Version { $old_version } is currently installed. Would you like to update to version { $app_version }?
 overwrite-newer-installed = A newer version of { $app_title } is already installed
@@ -252,3 +252,8 @@ runtime-failed-other = The runtime could not be prepared. Make sure the installa
 setup-runtime-download = The runtime download did not complete. Check the network connection, then run the installer again.
 setup-runtime-invalid = The downloaded file did not pass verification. Please run the installer again.
 setup-runtime-other = The runtime could not be prepared. Make sure the installation folder can be written to, then run the installer again.
+
+# Existing installation (install.rs)
+btn-start = Start
+overwrite-incomplete-header = The installation of { $app_title } is incomplete
+overwrite-incomplete-body = There are files at the install location, but the installed version could not be read. You can repair the installation.

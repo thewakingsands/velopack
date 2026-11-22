@@ -2,7 +2,8 @@
 //!
 //! vpk has already written both into the launcher stub. They are copied from there as they are, so
 //! nothing here has to build an icon directory or a version block: the resources of these three types
-//! are removed from the target, and the stub's are written in their place. Everything else in the
+//! are removed from the target, and the stub's icon and its version block for the main executable are
+//! written in their place. Everything else in the
 //! target, its manifest included, stays.
 
 use anyhow::{bail, Context, Result};
@@ -19,6 +20,9 @@ use windows::{
         UI::WindowsAndMessaging::{RT_GROUP_ICON, RT_ICON, RT_VERSION},
     },
 };
+
+/// The name of the version resource in the launcher stub that is meant for the main executable.
+const MAIN_VERSION_NAME: u16 = 2;
 
 /// A resource type or name: a number, or a string.
 #[derive(Clone, PartialEq)]
@@ -123,7 +127,14 @@ fn read_resources(file: &Path) -> Result<Vec<Resource>> {
 /// the shell reading its icon), and the resource update needs the file to itself: a failed attempt is
 /// repeated for a while before it counts.
 pub fn copy_icon_and_version(donor: &Path, target: &Path) -> Result<()> {
-    let wanted = read_resources(donor)?;
+    // The stub describes itself as the launcher in its own version resource (name 1) and carries the
+    // main executable's under name 2, which Windows ignores there.
+    let version = Ident::Id(RT_VERSION.0 as usize as u16);
+    let mut wanted = read_resources(donor)?;
+    wanted.retain(|resource| resource.kind != version || resource.name == Ident::Id(MAIN_VERSION_NAME));
+    for resource in wanted.iter_mut().filter(|resource| resource.kind == version) {
+        resource.name = Ident::Id(1);
+    }
     if !wanted.iter().any(|resource| resource.kind == Ident::Id(RT_GROUP_ICON.0 as usize as u16)) {
         bail!("{:?} has no icon to give to {:?}", donor, target);
     }

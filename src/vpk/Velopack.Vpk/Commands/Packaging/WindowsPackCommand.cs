@@ -30,6 +30,8 @@ public class WindowsPackCommand : PackCommand
 
     public string StubIcon { get; private set; }
 
+    public string Copyright { get; private set; }
+
     public string InstWelcome { get; private set; }
 
     public string InstLicense { get; private set; }
@@ -108,6 +110,10 @@ public class WindowsPackCommand : PackCommand
         AddOption<FileInfo>((v) => StubIcon = v.ToFullNameOrNull(), ["--stubIcon"])
             .SetDescription("Icon of the launcher stub when the package has no main executable (default: --icon).")
             .SetArgumentHelpName("PATH");
+
+        AddOption<string>((v) => Copyright = v, ["--copyright"])
+            .SetDescription("Copyright line in the properties of Setup, Update, the launcher stub and the main executable (default: 'Copyright © <year> <authors>').")
+            .SetArgumentHelpName("TEXT");
 
         if (VelopackRuntimeInfo.IsWindows) {
             AddOption<string>((v) => SignParameters = v, ["--signParams", "-n"])

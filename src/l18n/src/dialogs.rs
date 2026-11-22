@@ -185,65 +185,66 @@ pub fn show_uninstall_complete_with_errors_dialog(app_title: &str, log_path: Opt
     }
 }
 
-pub fn show_overwrite_repair_dialog(
+/// What the user chose when Setup found the application already installed.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ExistingInstall {
+    /// Replace the existing installation with this package.
+    Install,
+    /// Leave the installation as it is and start the application.
+    Start,
+    Cancel,
+}
+
+/// Asks what to do with an existing installation of the same or a newer version, or one whose
+/// version cannot be read (`installed_version` is `None`: files are missing).
+pub fn show_existing_install_dialog(
     app_title: &str,
     app_version: &semver::Version,
     root_path: &Path,
     installed_version: Option<&semver::Version>,
-) -> bool {
+) -> ExistingInstall {
     if get_silent() {
-        return true;
+        return ExistingInstall::Install;
     }
 
     let title = locale_strings::title_setup(app_title);
-    let path_str = root_path.display().to_string();
-
     let instruction;
     let body;
-    let yes_label;
-
-    if let Some(old_version) = installed_version {
-        let old_str = old_version.to_string();
-        let ver_str = app_version.to_string();
-        if old_version < app_version {
-            instruction = locale_strings::overwrite_older_installed(app_title);
-            body = locale_strings::overwrite_update_body(&old_str, &ver_str);
-            yes_label = locale_strings::btn_update();
-        } else if old_version > app_version {
+    let install_label;
+    match installed_version {
+        Some(old_version) if old_version > app_version => {
             instruction = locale_strings::overwrite_newer_installed(app_title);
-            body = locale_strings::overwrite_downgrade_body(&old_str);
-            yes_label = locale_strings::btn_downgrade();
-        } else {
+            body = locale_strings::overwrite_downgrade_body(&old_version.to_string());
+            install_label = locale_strings::btn_downgrade();
+        }
+        Some(_) => {
             instruction = locale_strings::overwrite_already_installed(app_title);
             body = locale_strings::overwrite_repair_body();
-            yes_label = locale_strings::btn_repair();
+            install_label = locale_strings::btn_repair();
         }
-    } else {
-        instruction = locale_strings::overwrite_already_installed(app_title);
-        body = locale_strings::overwrite_repair_body();
-        yes_label = locale_strings::btn_repair();
+        None => {
+            instruction = locale_strings::overwrite_incomplete_header(app_title);
+            body = locale_strings::overwrite_incomplete_body();
+            install_label = locale_strings::btn_repair();
+        }
     }
-
-    let footer = locale_strings::overwrite_footer(&path_str);
-
-    let cancel_label = locale_strings::btn_cancel();
-    let open_dir_label = locale_strings::btn_open_install_dir();
+    let footer = locale_strings::overwrite_footer(&root_path.display().to_string());
     let full_body = format!("{}\n\n{}", body, footer);
 
-    let buttons = vec![yes_label, open_dir_label, cancel_label];
-    let result = show_message(&title, &instruction, &full_body, general_icon(XDialogIcon::Warning), buttons);
-
-    match result {
-        Ok(XDialogResult::ButtonPressed(0)) => true,
-        Ok(XDialogResult::ButtonPressed(1)) => {
-            open_path(root_path);
-            show_overwrite_repair_dialog(app_title, app_version, root_path, installed_version)
-        }
+    // Buttons appear in reverse order and the last one is the default: starting what is installed
+    // comes first whenever it can be started.
+    let mut buttons = vec![locale_strings::btn_cancel(), install_label];
+    if installed_version.is_some() {
+        buttons.push(locale_strings::btn_start());
+    }
+    match show_message(&title, &instruction, &full_body, general_icon(XDialogIcon::Warning), buttons) {
+        Ok(XDialogResult::ButtonPressed(1)) => ExistingInstall::Install,
+        Ok(XDialogResult::ButtonPressed(2)) => ExistingInstall::Start,
         Ok(XDialogResult::TimeoutElapsed) => {
-            warn!("Overwrite/repair dialog timed out, treating as cancel.");
-            false
+            warn!("Existing installation dialog timed out, treating as cancel.");
+            ExistingInstall::Cancel
         }
-        _ => false,
+        _ => ExistingInstall::Cancel,
     }
 }
 

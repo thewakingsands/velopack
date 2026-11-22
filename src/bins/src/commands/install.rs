@@ -98,10 +98,25 @@ pub fn install(pkg: &mut BundleZip, install_to: Option<&PathBuf>, start_args: Op
             .map(|loc| loc.get_manifest_version().clone());
         // Running a newer installer is how a user updates by hand: there is nothing to ask.
         let is_update = installed_version.as_ref().is_some_and(|installed| installed < &app.version);
-        if !is_update && !dialogs::show_overwrite_repair_dialog(&app.title, &app.version, &root_path, installed_version.as_ref()) {
-            // user cancelled overwrite prompt
-            error!("Directory already exists, and user cancelled overwrite.");
-            return Ok(());
+        if !is_update {
+            match dialogs::show_existing_install_dialog(&app.title, &app.version, &root_path, installed_version.as_ref()) {
+                dialogs::ExistingInstall::Install => {}
+                dialogs::ExistingInstall::Start => {
+                    // The installed updater starts the app the way its launcher does, runtime check included.
+                    let update_exe = root_path.join("Update.exe");
+                    info!("User chose to start the existing installation with {:?}.", update_exe);
+                    std::process::Command::new(&update_exe)
+                        .arg("start")
+                        .current_dir(&root_path)
+                        .spawn()
+                        .map_err(|e| anyhow::anyhow!("Unable to start {:?}: {}", update_exe, e))?;
+                    return Ok(());
+                }
+                dialogs::ExistingInstall::Cancel => {
+                    error!("Directory already exists, and user cancelled overwrite.");
+                    return Ok(());
+                }
+            }
         }
         info!("User chose to overwrite existing installation.");
 

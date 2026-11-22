@@ -30,6 +30,8 @@ public class WindowsPackOptions : WindowsReleasifyOptions, INugetPackCommand, IP
 
     public string StubIcon { get; set; }
 
+    public string Copyright { get; set; }
+
     public string Shortcuts { get; set; } = "Desktop,StartMenuRoot";
 
     public string InstWelcome { get; set; }

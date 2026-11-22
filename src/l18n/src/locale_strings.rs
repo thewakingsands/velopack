@@ -343,6 +343,20 @@ pub fn runtime_finishing() -> String {
     format_message(RUNTIME_FINISHING, None)
 }
 
+pub fn btn_start() -> String {
+    format_message(BTN_START, None)
+}
+
+pub fn overwrite_incomplete_header(app: &str) -> String {
+    let mut args = FluentArgs::new();
+    args.set("app_title", app.to_string());
+    format_message(OVERWRITE_INCOMPLETE_HEADER, Some(&args))
+}
+
+pub fn overwrite_incomplete_body() -> String {
+    format_message(OVERWRITE_INCOMPLETE_BODY, None)
+}
+
 pub fn runtime_failed_header(app: &str) -> String {
     let mut args = FluentArgs::new();
     args.set("app_title", app.to_string());

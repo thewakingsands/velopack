@@ -10,7 +10,7 @@ btn-install-update = 安装更新
 btn-install = 安装
 btn-update = 更新
 btn-downgrade = 安装旧版本
-btn-repair = 重新安装
+btn-repair = 修复
 btn-open-log = 查看日志
 btn-open-install-dir = 打开安装位置
 btn-ok = 确定
@@ -33,7 +33,7 @@ uninstall-errors-log = 详细信息已保存至：{ $path }
 
 # Overwrite/repair dialog (install.rs)
 overwrite-already-installed = 已安装 { $app_title }
-overwrite-repair-body = 这台电脑上已安装相同版本。如果使用中遇到问题，可以重新安装。
+overwrite-repair-body = 这台电脑上已安装相同版本。如果无法正常使用，可以修复安装。
 overwrite-older-installed = 已安装 { $app_title }
 overwrite-update-body = 这台电脑上已安装 { $old_version }。是否更新到 { $app_version }？
 overwrite-newer-installed = 已安装较新版本的 { $app_title }
@@ -251,3 +251,8 @@ runtime-failed-other = 未能准备运行环境。请确认安装位置可以写
 setup-runtime-download = 运行环境下载未完成。请检查网络连接后重新运行安装程序。
 setup-runtime-invalid = 下载的文件未通过校验。请重新运行安装程序。
 setup-runtime-other = 未能准备运行环境。请确认安装位置可以写入后重新运行安装程序。
+
+# Existing installation (install.rs)
+btn-start = 启动
+overwrite-incomplete-header = { $app_title } 的安装不完整
+overwrite-incomplete-body = 安装位置中已有文件，但未能读取已安装的版本。可以修复安装。
