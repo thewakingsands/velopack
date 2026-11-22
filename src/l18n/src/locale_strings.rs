@@ -102,8 +102,11 @@ pub fn restart_body() -> String {
     format_message(RESTART_BODY, None)
 }
 
-pub fn overwrite_repair_body() -> String {
-    format_message(OVERWRITE_REPAIR_BODY, None)
+pub fn overwrite_repair_body(app: &str, version: &str) -> String {
+    let mut args = FluentArgs::new();
+    args.set("app_title", app.to_string());
+    args.set("app_version", version.to_string());
+    format_message(OVERWRITE_REPAIR_BODY, Some(&args))
 }
 
 pub fn uninstall_body() -> String {
@@ -205,8 +208,9 @@ pub fn overwrite_newer_installed(app: &str) -> String {
     format_message(OVERWRITE_NEWER_INSTALLED, Some(&args))
 }
 
-pub fn overwrite_downgrade_body(old: &str) -> String {
+pub fn overwrite_downgrade_body(app: &str, old: &str) -> String {
     let mut args = FluentArgs::new();
+    args.set("app_title", app.to_string());
     args.set("old_version", old.to_string());
     format_message(OVERWRITE_DOWNGRADE_BODY, Some(&args))
 }
@@ -353,8 +357,10 @@ pub fn overwrite_incomplete_header(app: &str) -> String {
     format_message(OVERWRITE_INCOMPLETE_HEADER, Some(&args))
 }
 
-pub fn overwrite_incomplete_body() -> String {
-    format_message(OVERWRITE_INCOMPLETE_BODY, None)
+pub fn overwrite_incomplete_body(app: &str) -> String {
+    let mut args = FluentArgs::new();
+    args.set("app_title", app.to_string());
+    format_message(OVERWRITE_INCOMPLETE_BODY, Some(&args))
 }
 
 pub fn runtime_failed_header(app: &str) -> String {

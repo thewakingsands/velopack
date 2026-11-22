@@ -33,11 +33,11 @@ uninstall-errors-log = 详细信息已保存至：{ $path }
 
 # Overwrite/repair dialog (install.rs)
 overwrite-already-installed = 已安装 { $app_title }
-overwrite-repair-body = 这台电脑上已安装相同版本。如果无法正常使用，可以修复安装。
+overwrite-repair-body = 这台电脑上已安装 { $app_title } { $app_version }，无需使用此安装程序进行更新。若无法正常使用 { $app_title }，可以修复当前安装。
 overwrite-older-installed = 已安装 { $app_title }
 overwrite-update-body = 这台电脑上已安装 { $old_version }。是否更新到 { $app_version }？
 overwrite-newer-installed = 已安装较新版本的 { $app_title }
-overwrite-downgrade-body = 这台电脑上已安装 { $old_version }，比此安装程序提供的版本新。安装旧版本可能导致现有数据无法使用，是否继续？
+overwrite-downgrade-body = 这台电脑上已安装 { $app_title } { $old_version }，无需使用此安装程序进行更新。若降级安装旧版本将可能导致程序无法正常工作甚至损坏现有用户数据，是否确认继续？
 overwrite-footer = 安装位置：{ $path }
 
 # Uninstall complete (uninstall.rs)
@@ -254,5 +254,5 @@ setup-runtime-other = 未能准备运行环境。请确认安装位置可以写�
 
 # Existing installation (install.rs)
 btn-start = 启动
-overwrite-incomplete-header = { $app_title } 的安装不完整
-overwrite-incomplete-body = 安装位置中已有文件，但未能读取已安装的版本。可以修复安装。
+overwrite-incomplete-header = { $app_title } 需要修复
+overwrite-incomplete-body = 这台电脑上的 { $app_title } 安装已损坏，需要修复安装。

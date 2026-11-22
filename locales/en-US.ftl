@@ -33,11 +33,11 @@ uninstall-errors-log = Details were saved to: { $path }
 
 # Overwrite/repair dialog (install.rs)
 overwrite-already-installed = { $app_title } is already installed
-overwrite-repair-body = This version is already installed on your computer. If it is not working correctly, you can repair the installation.
+overwrite-repair-body = { $app_title } { $app_version } is already installed on this computer, so there is no need to update it with this installer. If { $app_title } is not working correctly, you can repair the current installation.
 overwrite-older-installed = { $app_title } is already installed
 overwrite-update-body = Version { $old_version } is currently installed. Would you like to update to version { $app_version }?
 overwrite-newer-installed = A newer version of { $app_title } is already installed
-overwrite-downgrade-body = Version { $old_version } is currently installed, which is newer than this installer. Downgrading is not recommended and may cause problems. Continue anyway?
+overwrite-downgrade-body = { $app_title } { $old_version } is already installed on this computer, so there is no need to update it with this installer. Installing the older version may stop the application from working and may even damage your existing data. Continue anyway?
 overwrite-footer = Installed at: { $path }
 
 # Uninstall complete (uninstall.rs)
@@ -255,5 +255,5 @@ setup-runtime-other = The runtime could not be prepared. Make sure the installat
 
 # Existing installation (install.rs)
 btn-start = Start
-overwrite-incomplete-header = The installation of { $app_title } is incomplete
-overwrite-incomplete-body = There are files at the install location, but the installed version could not be read. You can repair the installation.
+overwrite-incomplete-header = { $app_title } needs to be repaired
+overwrite-incomplete-body = The installation of { $app_title } on this computer is damaged and needs to be repaired.

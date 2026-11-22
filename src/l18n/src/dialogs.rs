@@ -214,17 +214,17 @@ pub fn show_existing_install_dialog(
     match installed_version {
         Some(old_version) if old_version > app_version => {
             instruction = locale_strings::overwrite_newer_installed(app_title);
-            body = locale_strings::overwrite_downgrade_body(&old_version.to_string());
+            body = locale_strings::overwrite_downgrade_body(app_title, &old_version.to_string());
             install_label = locale_strings::btn_downgrade();
         }
-        Some(_) => {
+        Some(old_version) => {
             instruction = locale_strings::overwrite_already_installed(app_title);
-            body = locale_strings::overwrite_repair_body();
+            body = locale_strings::overwrite_repair_body(app_title, &old_version.to_string());
             install_label = locale_strings::btn_repair();
         }
         None => {
             instruction = locale_strings::overwrite_incomplete_header(app_title);
-            body = locale_strings::overwrite_incomplete_body();
+            body = locale_strings::overwrite_incomplete_body(app_title);
             install_label = locale_strings::btn_repair();
         }
     }
