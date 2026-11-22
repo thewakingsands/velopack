@@ -31,7 +31,7 @@ namespace Velopack.Packaging.Compression
             EasyZip.ExtractZipToDirectory(Log, deltaPackageZip, deltaPath);
             progress(10);
 
-            var pathsVisited = new List<string>();
+            var pathsVisited = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
             var deltaPathRelativePaths = new DirectoryInfo(deltaPath).GetAllFilesRecursively()
                 .Select(x => x.FullName.Replace(deltaPath + Path.DirectorySeparatorChar, ""))
@@ -46,7 +46,7 @@ namespace Velopack.Packaging.Compression
 
             for (var index = 0; index < files.Length; index++) {
                 var file = files[index];
-                pathsVisited.Add(DIFF_SUFFIX.Replace(file, "").ToLowerInvariant());
+                pathsVisited.Add(DIFF_SUFFIX.Replace(file, ""));
                 applyDiffToFile(deltaPath, file, workingPath);
                 var perc = (index + 1) / (double) files.Length * 100;
                 progress(CoreUtil.CalculateProgress((int) perc, 10, 90));
@@ -57,7 +57,7 @@ namespace Velopack.Packaging.Compression
             // Delete all of the files that were in the old package but
             // not in the new one.
             new DirectoryInfo(workingPath).GetAllFilesRecursively()
-                .Select(x => x.FullName.Replace(workingPath + Path.DirectorySeparatorChar, "").ToLowerInvariant())
+                .Select(x => x.FullName.Replace(workingPath + Path.DirectorySeparatorChar, ""))
                 .Where(x => x.StartsWith("lib", StringComparison.InvariantCultureIgnoreCase) && !pathsVisited.Contains(x))
                 .ForEach(
                     x => {
@@ -73,7 +73,7 @@ namespace Velopack.Packaging.Compression
                 .Where(
                     x => x.StartsWith("lib", StringComparison.InvariantCultureIgnoreCase)
                          && !x.EndsWith(".shasum", StringComparison.InvariantCultureIgnoreCase)
-                         && !pathsVisited.Contains(DIFF_SUFFIX.Replace(x, ""), StringComparer.InvariantCultureIgnoreCase))
+                         && !pathsVisited.Contains(DIFF_SUFFIX.Replace(x, "")))
                 .ForEach(
                     x => {
                         Log.Trace($"{x} was in new package but not in old one, adding");
@@ -102,7 +102,7 @@ namespace Velopack.Packaging.Compression
 
             // delete all metadata files that are not in the new package
             new DirectoryInfo(workingPath).GetAllFilesRecursively()
-                .Select(x => x.FullName.Replace(workingPath + Path.DirectorySeparatorChar, "").ToLowerInvariant())
+                .Select(x => x.FullName.Replace(workingPath + Path.DirectorySeparatorChar, ""))
                 .Where(
                     x => !x.StartsWith("lib", StringComparison.InvariantCultureIgnoreCase)
                          && !deltaPathRelativePaths.Contains(x, StringComparer.InvariantCultureIgnoreCase))

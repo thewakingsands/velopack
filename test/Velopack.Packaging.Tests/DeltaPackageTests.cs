@@ -33,6 +33,38 @@ public class ApplyDeltaPackageTests(ITestOutputHelper output)
     }
 
     [Fact]
+    public async Task ApplyRemovesObsoleteFilesWithMixedCasePaths()
+    {
+        using var t = TempUtil.GetTempDirectory(out var temp);
+        using var logger = output.BuildLoggerFor<ApplyDeltaPackageTests>();
+        var runner = new DeltaPatchCommandRunner(logger, new LoggerConsole(logger));
+        var basePackage = Path.Combine(temp, "base.nupkg");
+        using (var archive = ZipFile.Open(basePackage, ZipArchiveMode.Create)) {
+            archive.CreateEntry("lib/app/OldBootstrap.exe");
+            archive.CreateEntry("lib/app/Keep.dll");
+            archive.CreateEntry("OldMetadata.xml");
+        }
+
+        var deltaPackage = Path.Combine(temp, "delta.nupkg");
+        using (var archive = ZipFile.Open(deltaPackage, ZipArchiveMode.Create)) {
+            archive.CreateEntry("lib/app/Keep.dll.diff");
+            archive.CreateEntry("NewMetadata.xml");
+        }
+
+        var rebuiltPackage = Path.Combine(temp, "rebuilt.nupkg");
+        await runner.Run(new DeltaPatchOptions() {
+            BasePackage = basePackage,
+            OutputFile = rebuiltPackage,
+            PatchFiles = [new FileInfo(deltaPackage)],
+        });
+
+        using var rebuilt = ZipFile.OpenRead(rebuiltPackage);
+        Assert.Equal(
+            new[] { "NewMetadata.xml", "lib/app/Keep.dll" },
+            rebuilt.Entries.Where(entry => entry.Name.Length > 0).Select(entry => entry.FullName).Order(StringComparer.Ordinal));
+    }
+
+    [Fact]
     public async Task ApplyThrowsOnLegacyBsdiffPatch()
     {
         using var t1 = TempUtil.GetTempDirectory(out var temp);
